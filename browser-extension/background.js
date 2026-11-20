@@ -1,4 +1,6 @@
+// Preserve pending session items when upgrading the earlier local extension.
 const QUEUE_KEY = "fgetQueue";
+const QUEUE_PAUSED_KEY = "facebookVideoLoaderQueuePaused";
 const MAX_QUEUE_SIZE = 50;
 let queueRunner = null;
 
@@ -17,10 +19,21 @@ async function writeQueue(queue) {
   return queue;
 }
 
-function isLocalAppSender(sender) {
+async function readPaused() {
+  const values = await chrome.storage.session.get(QUEUE_PAUSED_KEY);
+  return Boolean(values[QUEUE_PAUSED_KEY]);
+}
+
+async function writePaused(paused) {
+  await chrome.storage.session.set({ [QUEUE_PAUSED_KEY]: Boolean(paused) });
+  return Boolean(paused);
+}
+
+function isAppSender(sender) {
   try {
     const url = new URL(sender.url || "");
-    return url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+    return (url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)) ||
+      (url.protocol === "https:" && url.hostname === "jiranot.github.io" && url.pathname.startsWith("/facedownload/"));
   } catch {
     return false;
   }
@@ -128,6 +141,17 @@ async function finishDownload(downloadId, state, errorCode = "") {
   const item = queue.find((entry) => entry.downloadId === downloadId && entry.status === "downloading");
   if (!item) return;
 
+  if (state === "interrupted" && errorCode === "SERVER_FORBIDDEN" && (item.freshUrlRetry || 0) < 1) {
+    await setQueueItem(item.id, {
+      status: "queued",
+      detail: "ลิงก์ CDN หมดอายุ (403) กำลังเปิดโพสต์เพื่อหาลิงก์ใหม่",
+      downloadId: null,
+      freshUrlRetry: 1,
+    });
+    startQueueRunner();
+    return;
+  }
+
   const detail = state === "complete"
     ? "เสร็จแล้ว"
     : errorCode === "SERVER_FORBIDDEN"
@@ -173,7 +197,7 @@ async function processOne(item) {
 
     const downloadId = await chrome.downloads.download({
       url: media.videoUrl,
-      filename: `FGet/${title}.mp4`,
+      filename: `Facebook Video Loader/${title}.mp4`,
       conflictAction: "uniquify",
       saveAs: false,
     });
@@ -215,6 +239,7 @@ async function recoverInterruptedWork() {
 async function drainQueue() {
   await recoverInterruptedWork();
   while (true) {
+    if (await readPaused()) return;
     const queue = await readQueue();
     if (queue.some((item) => item.status === "downloading")) return;
     const next = queue.find((item) => item.status === "queued");
@@ -229,7 +254,9 @@ function startQueueRunner() {
     queueRunner = null;
     void readQueue().then((queue) => {
       const hasActiveDownload = queue.some((item) => item.status === "downloading");
-      if (!hasActiveDownload && queue.some((item) => item.status === "queued")) startQueueRunner();
+      if (!hasActiveDownload && queue.some((item) => item.status === "queued")) {
+        void readPaused().then((paused) => { if (!paused) startQueueRunner(); }).catch(() => {});
+      }
     }).catch(() => {});
   });
   return queueRunner;
@@ -268,7 +295,7 @@ async function addToQueue(urlValues) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!isLocalAppSender(sender)) return;
+  if (!isAppSender(sender)) return;
 
   if (message?.type === "PING") {
     sendResponse({ available: true });
@@ -278,10 +305,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "QUEUE_GET") {
     (async () => {
       const queue = await readQueue();
-      if (!queueRunner && queue.some((item) => ["queued", "opening", "searching"].includes(item.status))) {
+      const paused = await readPaused();
+      if (!paused && !queueRunner && queue.some((item) => ["queued", "opening", "searching"].includes(item.status))) {
         void startQueueRunner();
       }
-      sendResponse({ available: true, queue });
+      sendResponse({ available: true, queue, paused });
     })();
     return true;
   }
@@ -290,9 +318,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       try {
         const result = await addToQueue(message.urls);
-        sendResponse({ available: true, invalidCount: Number(message.invalidCount) || 0, ...result });
+        sendResponse({ available: true, paused: await readPaused(), invalidCount: Number(message.invalidCount) || 0, ...result });
       } catch (error) {
-        sendResponse({ available: true, error: String(error?.message || "เพิ่มคิวไม่สำเร็จ"), queue: await readQueue() });
+        sendResponse({ available: true, paused: await readPaused(), error: String(error?.message || "เพิ่มคิวไม่สำเร็จ"), queue: await readQueue() });
       }
     })();
     return true;
@@ -302,7 +330,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const queue = await readQueue();
       const remaining = queue.filter((item) => !["complete", "failed"].includes(item.status));
-      sendResponse({ available: true, queue: await writeQueue(remaining) });
+      sendResponse({ available: true, queue: await writeQueue(remaining), paused: await readPaused(), notice: "ล้างรายการที่จบแล้วออกจากคิว" });
+    })();
+    return true;
+  }
+
+  if (message?.type === "QUEUE_PAUSE" || message?.type === "QUEUE_RESUME") {
+    (async () => {
+      const paused = await writePaused(message.type === "QUEUE_PAUSE");
+      if (!paused) void startQueueRunner();
+      sendResponse({ available: true, queue: await readQueue(), paused, notice: paused ? "พักคิวแล้ว" : "ทำคิวต่อแล้ว" });
+    })();
+    return true;
+  }
+
+  if (message?.type === "QUEUE_RETRY") {
+    (async () => {
+      const queue = await readQueue();
+      const item = queue.find((entry) => entry.id === message.id);
+      if (!item || item.status !== "failed") {
+        sendResponse({ available: true, queue, paused: await readPaused(), error: "ลองใหม่ได้เฉพาะรายการที่ไม่สำเร็จ" });
+        return;
+      }
+      await replaceQueueItem(item.id, { status: "queued", detail: "รอคิวอีกครั้ง", downloadId: null, freshUrlRetry: 0 });
+      if (!await readPaused()) void startQueueRunner();
+      sendResponse({ available: true, queue: await readQueue(), paused: await readPaused(), notice: "เพิ่มรายการให้ลองใหม่แล้ว" });
+    })();
+    return true;
+  }
+
+  if (message?.type === "QUEUE_REMOVE") {
+    (async () => {
+      const queue = await readQueue();
+      const item = queue.find((entry) => entry.id === message.id);
+      if (!item || !["queued", "complete", "failed"].includes(item.status)) {
+        sendResponse({ available: true, queue, paused: await readPaused(), error: "นำออกได้เฉพาะรายการที่ยังไม่เริ่มหรือจบแล้ว" });
+        return;
+      }
+      const updated = await writeQueue(queue.filter((entry) => entry.id !== item.id));
+      sendResponse({ available: true, queue: updated, paused: await readPaused(), notice: "นำรายการออกจากคิวแล้ว" });
     })();
     return true;
   }

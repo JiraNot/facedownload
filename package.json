@@ -1,12 +1,14 @@
 {
-  "name": "fget-private-video-web",
+  "name": "facebook-video-loader",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-build.mjs",
+    "build:pages": "vite build --base=/facedownload/",
     "preview": "vite preview",
+    "test:parser": "node --test tests/video-parser.test.mjs",
     "test:sites": "node --test tests/sites-worker.test.mjs"
   },
   "dependencies": {

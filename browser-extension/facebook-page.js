@@ -2,7 +2,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== "EXTRACT_FACEBOOK_VIDEO") return;
   try {
     const html = document.documentElement?.outerHTML || "";
-    const parsed = globalThis.FGetVideoParser.parseVideoSource(html);
+    const parsed = globalThis.FacebookVideoParser.parseVideoSource(html);
     sendResponse({
       ok: true,
       title: parsed.title || document.title || "Facebook video",

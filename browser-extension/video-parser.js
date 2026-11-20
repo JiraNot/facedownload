@@ -1,4 +1,4 @@
-(function attachFGetParser(global) {
+(function attachFacebookVideoParser(global) {
   function isFacebookMediaUrl(value) {
     try {
       const url = new URL(value);
@@ -113,5 +113,5 @@
     return { title, results };
   }
 
-  global.FGetVideoParser = { parseVideoSource };
+  global.FacebookVideoParser = { parseVideoSource };
 })(globalThis);

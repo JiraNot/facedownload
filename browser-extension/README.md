@@ -1,23 +1,23 @@
-# FGet Queue Downloader extension
+# Facebook Video Loader extension
 
-The extension connects the local FGet web app to the current browser profile so it can process links serially.
+The extension connects the Facebook Video Loader web app to the current Edge or Chrome profile so it can process links sequentially.
 
-## Load in Microsoft Edge
+## Load the extension
 
-1. Open `edge://extensions` in the Edge profile that is signed in to Facebook.
+1. Open `edge://extensions` or `chrome://extensions` in the browser profile signed in to Facebook.
 2. Turn on **Developer mode**.
 3. Choose **Load unpacked** and select this `browser-extension` folder.
-4. Refresh `http://127.0.0.1:4173/`.
-5. Paste one or more Facebook video links into the queue and choose **เพิ่มเข้าคิว**. New links can be added while the queue is running.
+4. Open or refresh the web app at `https://jiranot.github.io/facedownload/` (or the local Vite development URL).
+5. Paste Facebook video links into the queue. You can keep adding links while it runs.
 
-The extension opens one Facebook post in a background tab, reads the rendered page source with an isolated content script, and asks the browser download manager to download its best available muxed video URL. It waits for that download to finish before moving to the next item. It does not open browser-internal `view-source:` pages because extensions cannot inject code into those pages.
+The extension opens one Facebook post in a background tab, reads the loaded page with an isolated content script, and asks the browser download manager to save the best available muxed video. It waits for the download to finish before processing the next link. Browser-internal `view-source:` pages are not used because extensions cannot inject into them.
 
 ## Permissions and data
 
-- `downloads`: save each video through the browser download manager.
-- `storage`: keep the queue in session-only browser storage while Edge remains open.
-- Host access: read Facebook video pages and connect to the local FGet app. The extension uses the basic tabs API to open and close its processing tab; it does not request the separate `tabs` permission for access to unrelated tab URLs/titles.
+- `downloads`: save and monitor videos through the browser download manager.
+- `storage`: keep queue state in session-only browser storage while the browser remains open.
+- Host access: inspect Facebook post pages and connect to the local app or its GitHub Pages origin.
 
-The extension does not request the `cookies` permission, read or store browser cookies, collect credentials, or send page source to an app server. The browser download manager may attach cookies that already match a CDN host when it requests a media file. Queue URLs and statuses remain in the current browser session. Use it only for videos you are allowed to view and save.
+The extension does not request the `cookies` permission, read or store browser cookies, collect credentials, or send page source or media URLs to an app server. The browser may attach matching cookies already available to its own request. Use the extension only for videos you are allowed to view and save.
 
-Facebook may return an expired or forbidden CDN link. The queue marks that item as failed and then continues with the next one. Videos with separate audio and video streams are marked unsupported because this browser build does not merge streams.
+Expired CDN links may return 403; the extension reopens the post once to get a fresh URL, then reports a failed item if Facebook still rejects it. Videos with separate audio and video streams are not merged.
