@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Native Windows build artifacts from the earlier desktop prototype
+src-tauri/
+*.exe
+*.msi
+
+# Local editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+npm-debug.log*

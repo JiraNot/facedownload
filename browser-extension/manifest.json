@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "FGet Queue Downloader",
+  "version": "1.1.0",
+  "description": "Process Facebook video links sequentially in the signed-in browser profile.",
+  "permissions": ["downloads", "storage"],
+  "host_permissions": [
+    "https://facebook.com/*",
+    "https://*.facebook.com/*",
+    "https://fb.watch/*",
+    "https://*.fb.watch/*",
+    "https://fb.gg/*",
+    "https://*.fb.gg/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*", "http://127.0.0.1/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://facebook.com/*",
+        "https://*.facebook.com/*",
+        "https://fb.watch/*",
+        "https://*.fb.watch/*",
+        "https://fb.gg/*",
+        "https://*.fb.gg/*"
+      ],
+      "js": ["video-parser.js", "facebook-page.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
