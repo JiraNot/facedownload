@@ -46,4 +46,4 @@
 - `VITE_ADSENSE_SLOT_TOOL` — ad unit ID สำหรับตำแหน่งใต้ตัวจัดการคิว
 - `VITE_ADSENSE_SLOT_CONTENT` — ad unit ID สำหรับตำแหน่งใต้ FAQ
 
-ตั้งค่าใน `.env.local` สำหรับ build ในเครื่อง หรือ Repository Variables ชื่อเดียวกันสำหรับ GitHub Actions จากนั้น build และ deploy ใหม่ ต้องเพิ่ม/ยืนยันเว็บไซต์และสร้าง ad units ในบัญชี AdSense ก่อน Google จึงจะพิจารณาแสดงโฆษณา.
+ตั้งค่าใน `.env.local` สำหรับ build ในเครื่อง หรือ Repository Variables ชื่อเดียวกันสำหรับ GitHub Actions จากนั้น build และ deploy ใหม่ ระบบจะสร้าง `ads.txt` จาก publisher ID จริงให้อัตโนมัติ ต้องเพิ่ม/ยืนยันเว็บไซต์และสร้าง ad units ในบัญชี AdSense ก่อน Google จึงจะพิจารณาแสดงโฆษณา.

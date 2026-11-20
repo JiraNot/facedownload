@@ -17,6 +17,13 @@ html = html.replace(
 );
 
 const publisherId = process.env.VITE_ADSENSE_CLIENT || "";
+if (/^ca-pub-\d+$/.test(publisherId)) {
+  const adsTxtPublisherId = publisherId.replace(/^ca-/, "");
+  await writeFile(
+    path.join(outputDir, "ads.txt"),
+    `google.com, ${adsTxtPublisherId}, DIRECT, f08c47fec0942fa0\n`,
+  );
+}
 const hasAdUnit = /^\d+$/.test(process.env.VITE_ADSENSE_SLOT_TOOL || "") ||
   /^\d+$/.test(process.env.VITE_ADSENSE_SLOT_CONTENT || "");
 const adsenseScript = /^ca-pub-\d+$/.test(publisherId) && hasAdUnit
