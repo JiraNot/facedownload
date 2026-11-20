@@ -7,7 +7,7 @@ The extension connects the Facebook Video Loader web app to the current Edge or 
 1. Open `edge://extensions` or `chrome://extensions` in the browser profile signed in to Facebook.
 2. Turn on **Developer mode**.
 3. Choose **Load unpacked** and select this `browser-extension` folder.
-4. Open or refresh the web app at `https://jiranot.github.io/facedownload/` (or the local Vite development URL).
+4. Open or refresh the deployed web app at its Vercel URL (or the local Vite development URL). The extension must include that exact site origin in `manifest.json` and `background.js`; add the assigned Vercel host there and reload the unpacked extension before use. The legacy Pages URL is `https://jiranot.github.io/facedownload/`.
 5. Paste Facebook video links into the queue. You can keep adding links while it runs.
 
 The extension opens one Facebook post in a background tab, reads the loaded page with an isolated content script, and asks the browser download manager to save the best available muxed video. It waits for the download to finish before processing the next link. Browser-internal `view-source:` pages are not used because extensions cannot inject into them.
@@ -16,7 +16,7 @@ The extension opens one Facebook post in a background tab, reads the loaded page
 
 - `downloads`: save and monitor videos through the browser download manager.
 - `storage`: keep queue state in session-only browser storage while the browser remains open.
-- Host access: inspect Facebook post pages and connect to the local app or its GitHub Pages origin.
+- Host access: inspect Facebook post pages and connect to the local app or the configured production web app origin.
 
 The extension does not request the `cookies` permission, read or store browser cookies, collect credentials, or send page source or media URLs to an app server. The browser may attach matching cookies already available to its own request. Use the extension only for videos you are allowed to view and save.
 

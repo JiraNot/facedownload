@@ -10,7 +10,15 @@
 4. เปิดเว็บแอปและรีเฟรชหน้า
 5. วางลิงก์ทีละหลายรายการหรือทยอยเพิ่มรายการ แล้วเลือก **เพิ่มเข้าคิว**
 
-หน้าเว็บเผยแพร่ผ่าน GitHub Pages ที่ `https://jiranot.github.io/facedownload/` โดย workflow จะ build และ deploy เมื่อมีการ push เข้า `main`.
+## เผยแพร่ด้วย Vercel
+
+นำ repository `JiraNot/facedownload` เข้า Vercel โดยเลือก framework preset เป็น Vite (หรือให้ Vercel ตรวจจับอัตโนมัติ) ค่า build ถูกกำหนดไว้ใน `vercel.json` แล้ว: ติดตั้งด้วย `npm ci`, รัน `npm run build:vercel` และเผยแพร่โฟลเดอร์ `dist/client`. เมื่อเชื่อม GitHub แล้ว การ push เข้า `main` จะสร้าง production deployment และ branch อื่นจะสร้าง preview deployment.
+
+สคริปต์ prerender ใช้ `VITE_VERCEL_PROJECT_PRODUCTION_URL` ที่ Vercel กำหนดให้สร้าง canonical URL, sitemap และ robots.txt ตาม production domain หากใช้ custom domain ให้เพิ่ม `VITE_SITE_URL` เป็น URL แบบ HTTPS ใน Project Environment Variables เพื่อให้ metadata ชี้ไปยังโดเมนหลักที่ต้องการ
+
+หลัง Vercel แสดง production URL แล้ว ให้นำ origin และ base path ของ URL นั้นไปเพิ่มใน `browser-extension/manifest.json` และ `browser-extension/background.js` ก่อนโหลดส่วนขยายใหม่ เพื่อให้เว็บแอปสื่อสารกับส่วนขยายได้
+
+`https://jiranot.github.io/facedownload/` ยังเป็น fallback สำหรับ build GitHub Pages เดิม (`npm run build:pages`).
 
 หน้า HTML จะ pre-render เนื้อหาคำแนะนำและ FAQ ไว้ใน source เพื่อให้ crawler อ่านได้ก่อน JavaScript ทำงาน มี title/description, canonical URL, sitemap และ `WebApplication` structured data การเตรียมข้อมูลนี้ช่วยให้ค้นพบและเข้าใจหน้าได้ แต่ไม่รับประกันอันดับหรือการแสดงผลใน Google/AI Search.
 
@@ -35,6 +43,7 @@
 - `npm run dev` — เปิดเซิร์ฟเวอร์พัฒนา
 - `npm run build` — build สำหรับ local preview และ Sites handoff
 - `npm run build:pages` — build โดยใช้ base path ของ GitHub Pages
+- `npm run build:vercel` — build เว็บพร้อม prerender สำหรับ Vercel
 - `npm run test:parser` — ทดสอบ parser ด้วยตัวอย่างที่ไม่มีข้อมูลผู้ใช้
 - `npm run test:sites` — ทดสอบ Sites worker
 
@@ -46,4 +55,4 @@
 - `VITE_ADSENSE_SLOT_TOOL` — ad unit ID สำหรับตำแหน่งใต้ตัวจัดการคิว
 - `VITE_ADSENSE_SLOT_CONTENT` — ad unit ID สำหรับตำแหน่งใต้ FAQ
 
-ตั้งค่าใน `.env.local` สำหรับ build ในเครื่อง หรือ Repository Variables ชื่อเดียวกันสำหรับ GitHub Actions จากนั้น build และ deploy ใหม่ ระบบจะสร้าง `ads.txt` จาก publisher ID จริงให้อัตโนมัติ ต้องเพิ่ม/ยืนยันเว็บไซต์และสร้าง ad units ในบัญชี AdSense ก่อน Google จึงจะพิจารณาแสดงโฆษณา.
+ตั้งค่าใน `.env.local` สำหรับ build ในเครื่อง หรือ Project Environment Variables ใน Vercel จากนั้น build และ deploy ใหม่ ระบบจะสร้าง `ads.txt` จาก publisher ID จริงให้อัตโนมัติ ต้องเพิ่ม/ยืนยันเว็บไซต์และสร้าง ad units ในบัญชี AdSense ก่อน Google จึงจะพิจารณาแสดงโฆษณา.
