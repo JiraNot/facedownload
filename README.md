@@ -12,6 +12,8 @@
 
 หน้าเว็บเผยแพร่ผ่าน GitHub Pages ที่ `https://jiranot.github.io/facedownload/` โดย workflow จะ build และ deploy เมื่อมีการ push เข้า `main`.
 
+หน้า HTML จะ pre-render เนื้อหาคำแนะนำและ FAQ ไว้ใน source เพื่อให้ crawler อ่านได้ก่อน JavaScript ทำงาน มี title/description, canonical URL, sitemap และ `WebApplication` structured data การเตรียมข้อมูลนี้ช่วยให้ค้นพบและเข้าใจหน้าได้ แต่ไม่รับประกันอันดับหรือการแสดงผลใน Google/AI Search.
+
 ## พฤติกรรมคิว
 
 - เปิดโพสต์ Facebook หนึ่งรายการในแท็บเบื้องหลัง
@@ -35,3 +37,13 @@
 - `npm run build:pages` — build โดยใช้ base path ของ GitHub Pages
 - `npm run test:parser` — ทดสอบ parser ด้วยตัวอย่างที่ไม่มีข้อมูลผู้ใช้
 - `npm run test:sites` — ทดสอบ Sites worker
+
+## Google AdSense
+
+หน้าเว็บมีตำแหน่งโฆษณา responsive สองตำแหน่ง โดยจะไม่แสดงหรือโหลด AdSense จนกว่าจะกำหนดค่าจริง:
+
+- `VITE_ADSENSE_CLIENT` — publisher ID รูปแบบ `ca-pub-...`
+- `VITE_ADSENSE_SLOT_TOOL` — ad unit ID สำหรับตำแหน่งใต้ตัวจัดการคิว
+- `VITE_ADSENSE_SLOT_CONTENT` — ad unit ID สำหรับตำแหน่งใต้ FAQ
+
+ตั้งค่าใน `.env.local` สำหรับ build ในเครื่อง หรือ Repository Variables ชื่อเดียวกันสำหรับ GitHub Actions จากนั้น build และ deploy ใหม่ ต้องเพิ่ม/ยืนยันเว็บไซต์และสร้าง ad units ในบัญชี AdSense ก่อน Google จึงจะพิจารณาแสดงโฆษณา.

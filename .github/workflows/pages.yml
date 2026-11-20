@@ -16,6 +16,10 @@ concurrency:
 
 jobs:
   deploy:
+    env:
+      VITE_ADSENSE_CLIENT: ${{ vars.VITE_ADSENSE_CLIENT }}
+      VITE_ADSENSE_SLOT_TOOL: ${{ vars.VITE_ADSENSE_SLOT_TOOL }}
+      VITE_ADSENSE_SLOT_CONTENT: ${{ vars.VITE_ADSENSE_SLOT_CONTENT }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
