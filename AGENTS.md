@@ -12,7 +12,7 @@
 - AdSense is opt-in: render no ad slot and load no Google script unless the client and corresponding numeric slot ID are configured. Never invent publisher or slot IDs.
 - Keep the queue in extension session storage. Validate Facebook post and CDN hosts before opening or downloading URLs.
 - Queue export must include only Facebook post links that are not completed; import must pass links through the existing Facebook URL validation. Keep export local and explain that the file contains potentially private post URLs.
-- Download quality and filename preferences apply to newly added queue items and must be restricted to supported values in the extension. Per-link custom filenames must be sanitized by the extension before use. When changing extension features used by the page, report the extension version so the page can prompt users to update.
+- Download quality and filename preferences apply to newly added queue items and must be restricted to supported values in the extension. The queue form pairs custom file names with URLs by line number; blank names use the selected fallback format. Per-link custom filenames must be sanitized by the extension before use. When changing extension features used by the page, report the extension version so the page can prompt users to update.
 - Pause takes effect after the currently processing/downloading item finishes. Failed items can be retried or removed; active items cannot be removed.
 
 ## Architecture

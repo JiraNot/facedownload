@@ -32,6 +32,17 @@ function parseQueueText(text) {
   });
 }
 
+function parseQueueInputs(urlText, filenameText) {
+  const filenames = filenameText.split(/\r?\n/);
+  return urlText.split(/\r?\n/).flatMap((line, index) => {
+    const filename = filenames[index]?.trim() || "";
+    return parseQueueText(line).map((entry) => ({
+      ...entry,
+      customFilename: entry.customFilename || filename,
+    }));
+  });
+}
+
 function compareVersions(first, second) {
   const a = String(first).split(".").map(Number);
   const b = String(second).split(".").map(Number);
@@ -67,6 +78,7 @@ function GuideIcon({ name }) {
 export function App({ initialLanguage = "th" }) {
   const [language, setLanguage] = useState(initialLanguage);
   const [queueText, setQueueText] = useState("");
+  const [queueFilenameText, setQueueFilenameText] = useState("");
   const [queueItems, setQueueItems] = useState([]);
   const [queuePaused, setQueuePaused] = useState(false);
   const [extensionAvailable, setExtensionAvailable] = useState(false);
@@ -135,7 +147,10 @@ export function App({ initialLanguage = "th" }) {
       if (message.type === "QUEUE_ADD_RESULT" && message.requestId === requestRef.current) {
         requestRef.current = "";
         setQueueSubmitting(false);
-        if (!message.error && clearQueueTextAfterAddRef.current) setQueueText("");
+        if (!message.error && clearQueueTextAfterAddRef.current) {
+          setQueueText("");
+          setQueueFilenameText("");
+        }
         clearQueueTextAfterAddRef.current = false;
         const notes = [message.error];
         if (!message.error && message.addedCount) notes.push(`เพิ่ม ${message.addedCount} รายการเข้าคิวแล้ว`);
@@ -212,7 +227,7 @@ export function App({ initialLanguage = "th" }) {
 
   function addQueueItems(event) {
     event.preventDefault();
-    enqueueUrls(parseQueueText(queueText), { clearInput: true });
+    enqueueUrls(parseQueueInputs(queueText, queueFilenameText), { clearInput: true });
   }
 
   async function importQueueFile(event) {
@@ -350,16 +365,32 @@ export function App({ initialLanguage = "th" }) {
             </div>
 
             <form className="queue-form" onSubmit={addQueueItems}>
-              <label htmlFor="queue-urls">{copy.queue.inputLabel}</label>
-              <textarea
-                id="queue-urls"
-                className="queue-input"
-                value={queueText}
-                onChange={(event) => setQueueText(event.target.value)}
-                placeholder={copy.queue.placeholder}
-                spellCheck={false}
-                aria-describedby="queue-help"
-              />
+              <div className="queue-pair-fields">
+                <label className="queue-pair-field" htmlFor="queue-urls">
+                  <span>{copy.queue.inputLabel}</span>
+                  <textarea
+                    id="queue-urls"
+                    className="queue-input"
+                    value={queueText}
+                    onChange={(event) => setQueueText(event.target.value)}
+                    placeholder={copy.queue.placeholder}
+                    spellCheck={false}
+                    aria-describedby="queue-help"
+                  />
+                </label>
+                <label className="queue-pair-field" htmlFor="queue-filenames">
+                  <span>{copy.queue.filenameInputLabel}</span>
+                  <textarea
+                    id="queue-filenames"
+                    className="queue-input"
+                    value={queueFilenameText}
+                    onChange={(event) => setQueueFilenameText(event.target.value)}
+                    placeholder={copy.queue.filenamePlaceholder}
+                    spellCheck={false}
+                    aria-describedby="queue-help"
+                  />
+                </label>
+              </div>
               <div className="form-footer">
                 <span id="queue-help">{copy.queue.inputHelp}</span>
                 <button type="submit" className="primary-button" disabled={queueSubmitting}>
