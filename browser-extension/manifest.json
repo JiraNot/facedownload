@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "minimum_chrome_version": "116",
   "name": "Facebook Video Loader",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Find and download Facebook videos sequentially in the signed-in browser profile.",
   "permissions": ["downloads", "storage", "offscreen"],
   "host_permissions": [

@@ -15,6 +15,23 @@ function isFacebookPageUrl(value) {
   }
 }
 
+function parseQueueText(text) {
+  return text.split(/\r?\n/).flatMap((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return [];
+
+    const separators = [trimmed.indexOf("|"), trimmed.indexOf("\t")].filter((index) => index >= 0);
+    if (separators.length) {
+      const separatorIndex = Math.min(...separators);
+      const urls = trimmed.slice(0, separatorIndex).trim().split(/[\s,;]+/).filter(Boolean);
+      const customFilename = trimmed.slice(separatorIndex + 1).trim();
+      return urls.map((url) => ({ url, customFilename }));
+    }
+
+    return trimmed.split(/[\s,;]+/).filter(Boolean).map((url) => ({ url }));
+  });
+}
+
 function compareVersions(first, second) {
   const a = String(first).split(".").map(Number);
   const b = String(second).split(".").map(Number);
@@ -100,7 +117,7 @@ export function App({ initialLanguage = "th" }) {
     }
   }
 
-  const extensionNeedsUpdate = extensionAvailable && (!extensionVersion || compareVersions(extensionVersion, "1.4.0") < 0);
+  const extensionNeedsUpdate = extensionAvailable && (!extensionVersion || compareVersions(extensionVersion, "1.5.0") < 0);
 
   useEffect(() => {
     function receive(event) {
@@ -150,6 +167,7 @@ export function App({ initialLanguage = "th" }) {
       ? { url: value.trim(), qualityPreference, filenamePattern }
       : {
         url: String(value?.url || "").trim(),
+        customFilename: String(value?.customFilename || "").trim(),
         qualityPreference: value?.qualityPreference,
         filenamePattern: value?.filenamePattern,
       }).filter((value) => value.url);
@@ -194,7 +212,7 @@ export function App({ initialLanguage = "th" }) {
 
   function addQueueItems(event) {
     event.preventDefault();
-    enqueueUrls(queueText.split(/[\s,;]+/), { clearInput: true });
+    enqueueUrls(parseQueueText(queueText), { clearInput: true });
   }
 
   async function importQueueFile(event) {
@@ -207,7 +225,7 @@ export function App({ initialLanguage = "th" }) {
       const text = await file.text();
       let entries;
       if (file.name.toLowerCase().endsWith(".txt")) {
-        entries = text.split(/[\s,;]+/);
+        entries = parseQueueText(text);
       } else {
         const exported = JSON.parse(text);
         if (Array.isArray(exported)) entries = exported;
@@ -241,6 +259,7 @@ export function App({ initialLanguage = "th" }) {
         .filter((item) => item.status !== "complete" && item.url)
         .map((item) => ({
           url: item.url,
+          ...(item.customFilename ? { customFilename: item.customFilename } : {}),
           qualityPreference: item.qualityPreference || "auto",
           filenamePattern: item.filenamePattern || "title",
         })),
@@ -388,11 +407,14 @@ export function App({ initialLanguage = "th" }) {
                 {queueItems.map((item, index) => {
                   const canRetry = item.status === "failed";
                   const canRemove = ["queued", "complete", "failed"].includes(item.status);
+                  const queueLabel = item.customFilename
+                    ? `${item.customFilename.replace(/\.mp4$/i, "")}.mp4`
+                    : item.title || item.url;
                   return (
                     <li key={item.id} className={`queue-item status-${item.status}`}>
                       <span className="queue-number">{String(index + 1).padStart(2, "0")}</span>
                       <div className="queue-item-main">
-                        <span className="queue-item-label" title={item.url}>{item.title || item.url}</span>
+                        <span className="queue-item-label" title={item.customFilename ? `${queueLabel} · ${item.title || item.url}` : item.url}>{queueLabel}</span>
                         <span className="queue-item-state"><i />{localizeQueueDetail(item.detail, item.status, language)}</span>
                       </div>
                       <div className="queue-item-actions">

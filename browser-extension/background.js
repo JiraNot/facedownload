@@ -70,6 +70,11 @@ function safeFilename(value, fallback) {
   return result || fallback;
 }
 
+function normalizeCustomFilename(value) {
+  const baseName = String(value || "").trim().replace(/\.mp4$/i, "");
+  return baseName ? safeFilename(baseName, "") : "";
+}
+
 async function replaceQueueItem(id, changes) {
   const queue = await readQueue();
   const updated = queue.map((item) => item.id === id
@@ -243,6 +248,7 @@ function chooseMedia(results, preference) {
 
 function buildDownloadBaseName(title, item) {
   const safeTitle = safeFilename(title, `facebook-video-${item.id.slice(0, 8)}`);
+  if (item.customFilename) return safeFilename(item.customFilename, safeTitle);
   if (item.filenamePattern === "date-title") {
     const today = new Date();
     const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -502,6 +508,7 @@ async function addToQueue(urlValues, options = {}) {
     seenUrls.add(url);
     normalized.push({
       url,
+      customFilename: normalizeCustomFilename(entry?.customFilename),
       qualityPreference: QUALITY_PREFERENCES.has(entry?.qualityPreference) ? entry.qualityPreference : qualityPreference,
       filenamePattern: FILENAME_PATTERNS.has(entry?.filenamePattern) ? entry.filenamePattern : filenamePattern,
     });
@@ -510,10 +517,10 @@ async function addToQueue(urlValues, options = {}) {
 
   const queue = await readQueue();
   const activeUrls = new Set(queue
-    .filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status))
+    .filter((item) => ["queued", "opening", "searching", "merging", "downloading"].includes(item.status))
     .map((item) => item.url));
   const newUrls = normalized.filter((entry) => !activeUrls.has(entry.url));
-  if (queue.filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status)).length + newUrls.length > MAX_QUEUE_SIZE) {
+  if (queue.filter((item) => ["queued", "opening", "searching", "merging", "downloading"].includes(item.status)).length + newUrls.length > MAX_QUEUE_SIZE) {
     throw new Error(`คิวรองรับรายการที่ยังไม่เสร็จได้สูงสุด ${MAX_QUEUE_SIZE} รายการ`);
   }
 
@@ -525,6 +532,7 @@ async function addToQueue(urlValues, options = {}) {
     detail: "รอคิว",
     qualityPreference: entry.qualityPreference,
     filenamePattern: entry.filenamePattern,
+    customFilename: entry.customFilename,
     downloadId: null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
