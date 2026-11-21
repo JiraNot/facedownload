@@ -4,6 +4,7 @@ dist/
 coverage/
 .vercel/
 public/downloads/
+browser-extension/offscreen.bundle.js
 *.tsbuildinfo
 
 # Secrets and local environment

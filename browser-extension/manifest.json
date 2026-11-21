@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
+  "minimum_chrome_version": "116",
   "name": "Facebook Video Loader",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Find and download Facebook videos sequentially in the signed-in browser profile.",
-  "permissions": ["downloads", "storage"],
+  "permissions": ["downloads", "storage", "offscreen"],
   "host_permissions": [
     "https://facebook.com/*",
     "https://*.facebook.com/*",
@@ -11,6 +12,8 @@
     "https://*.fb.watch/*",
     "https://fb.gg/*",
     "https://*.fb.gg/*",
+    "https://*.fbcdn.net/*",
+    "https://*.fbsbx.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
     "https://jiranot.github.io/*",

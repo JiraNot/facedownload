@@ -3,6 +3,7 @@ const STATUS = {
     queued: "รอคิว",
     opening: "กำลังเปิด Facebook",
     searching: "กำลังค้นหาวิดีโอ",
+    merging: "กำลังรวมภาพและเสียง",
     downloading: "กำลังดาวน์โหลด",
     complete: "เสร็จแล้ว",
     failed: "ไม่สำเร็จ",
@@ -11,6 +12,7 @@ const STATUS = {
     queued: "Queued",
     opening: "Opening Facebook",
     searching: "Finding video",
+    merging: "Merging audio and video",
     downloading: "Downloading",
     complete: "Completed",
     failed: "Failed",
@@ -45,7 +47,7 @@ export const COPY = {
       waiting: "รอส่วนขยาย",
       readyNote: "เชื่อมต่อส่วนขยายแล้ว ใช้ Facebook ในโปรไฟล์เบราว์เซอร์นี้",
       missingNote: "เปิดส่วนขยายใน Edge หรือ Chrome โปรไฟล์เดียวกับ Facebook แล้วรีเฟรชหน้านี้",
-      updateNote: "ส่วนขยายเวอร์ชันเก่า ตัวเลือกคุณภาพและชื่อไฟล์ต้องใช้เวอร์ชัน 1.3.0 ขึ้นไป",
+      updateNote: "ส่วนขยายเวอร์ชันเก่า ตัวเลือกและการรวมภาพกับเสียงต้องใช้เวอร์ชัน 1.4.0 ขึ้นไป",
       updateLink: "ดาวน์โหลดแล้วโหลดส่วนขยายใหม่",
       inputLabel: "วางลิงก์วิดีโอ Facebook",
       placeholder: "วางหนึ่งลิงก์ต่อบรรทัด\nhttps://www.facebook.com/reel/...",
@@ -120,7 +122,7 @@ export const COPY = {
         ["ดาวน์โหลดวิดีโอในกลุ่มส่วนตัวได้หรือไม่?", "ระบบค้นหาได้เมื่อบัญชีที่ล็อกอินอยู่มีสิทธิ์เปิดโพสต์นั้น แต่รูปแบบโพสต์และสิทธิ์ของ Facebook อาจทำให้บางวิดีโอไม่สามารถค้นหาหรือดาวน์โหลดได้ ใช้กับวิดีโอที่คุณมีสิทธิ์บันทึกเท่านั้น"],
         ["ถ้าขึ้น Facebook CDN 403 ต้องทำอย่างไร?", "ลิงก์วิดีโออาจหมดอายุ ระบบจะเปิดโพสต์อีกครั้งเพื่อหาลิงก์ใหม่หนึ่งครั้ง หากยังถูกปฏิเสธ ให้ตรวจว่าโพสต์ยังเปิดได้ในโปรไฟล์นี้ แล้วกดลองใหม่จากรายการที่ล้มเหลว"],
         ["ไฟล์ที่ดาวน์โหลดอยู่ที่ไหน และเก็บข้อมูลอะไรไว้บ้าง?", "ไฟล์ใช้โฟลเดอร์ดาวน์โหลดของเบราว์เซอร์ ส่วนคิวและสถานะอยู่ใน session ของส่วนขยายและถูกล้างเมื่อปิดเบราว์เซอร์ เว็บแอปไม่ขอสิทธิ์ cookies และไม่เก็บรหัสผ่าน Facebook"],
-        ["ทำไมบางวิดีโอถึงดาวน์โหลดไม่ได้?", "โพสต์อาจต้องใช้สิทธิ์เพิ่มเติม ลิงก์ CDN อาจถูกยกเลิก หรือวิดีโออาจแยกสตรีมภาพกับเสียง ซึ่งตัวดาวน์โหลดรุ่นนี้ยังไม่รวมเป็นไฟล์เดียว"],
+        ["ทำไมบางวิดีโอถึงดาวน์โหลดไม่ได้?", "โพสต์อาจต้องใช้สิทธิ์เพิ่มเติมหรือลิงก์ CDN อาจหมดอายุ วิดีโอที่แยกภาพกับเสียงจะถูกรวมเป็นไฟล์ MP4 ในเบราว์เซอร์ หากรูปแบบไม่รองรับ ระบบจะแจ้งให้ทราบ"],
       ],
     },
     troubleshooting: {
@@ -130,7 +132,7 @@ export const COPY = {
       steps: [
         ["ตรวจว่าเปิดโพสต์ได้", "เปิดโพสต์ใน Edge หรือ Chrome โปรไฟล์เดียวกับส่วนขยาย และลองเล่นวิดีโอให้เริ่มก่อน"],
         ["ลองดึงลิงก์ใหม่", "ระบบจะเปิดโพสต์อีกครั้งให้อัตโนมัติหนึ่งครั้ง ถ้ารายการยังไม่สำเร็จ ให้กด ลองใหม่ ในคิว"],
-        ["ตรวจสิทธิ์และรูปแบบวิดีโอ", "ถ้ายังขึ้น 403 ให้ยืนยันว่าบัญชีนี้มีสิทธิ์ดูโพสต์ วิดีโอที่แยกภาพกับเสียงยังดาวน์โหลดเป็นไฟล์เดียวไม่ได้"],
+        ["ตรวจสิทธิ์และรูปแบบวิดีโอ", "ถ้ายังขึ้น 403 ให้ยืนยันว่าบัญชีนี้มีสิทธิ์ดูโพสต์ ระบบจะรวมวิดีโอที่แยกภาพกับเสียงในเบราว์เซอร์ แต่บางรูปแบบอาจไม่รองรับ"],
       ],
       note: "การส่งออกคิวเก็บเฉพาะ URL โพสต์ Facebook ไว้ในไฟล์บนเครื่อง โปรดเก็บไฟล์นั้นในที่ปลอดภัยและอย่าแชร์ลิงก์ส่วนตัว",
     },
@@ -179,7 +181,7 @@ export const COPY = {
       waiting: "Waiting for extension",
       readyNote: "Extension connected. Facebook is available in this browser profile.",
       missingNote: "Enable the extension in the Edge or Chrome profile you use for Facebook, then refresh this page.",
-      updateNote: "This extension is out of date. Quality and file-name options require version 1.3.0 or later.",
+      updateNote: "This extension is out of date. Download options and audio/video merging require version 1.4.0 or later.",
       updateLink: "Download and reload the extension",
       inputLabel: "Paste Facebook video links",
       placeholder: "One link per line\nhttps://www.facebook.com/reel/...",
@@ -254,7 +256,7 @@ export const COPY = {
         ["Can I download videos from private groups?", "The extension can look for a video when your signed-in account can open the post. Facebook permissions and post formats may still prevent some downloads. Only save videos you are allowed to keep."],
         ["What should I do if Facebook CDN returns 403?", "A video link may have expired. The extension reopens the post once to find a fresh link. If Facebook still rejects it, confirm you can open the post in this profile and retry the failed item."],
         ["Where are files saved, and what data is stored?", "Files go to your browser's download folder. Queue state stays in the extension's session storage and clears when the browser closes. The app does not request cookie access or store your Facebook password."],
-        ["Why can't some videos be downloaded?", "A post may need additional access, a CDN link may expire, or the video may use separate audio and video streams that this version cannot combine into one file."],
+        ["Why can't some videos be downloaded?", "A post may need additional access or its CDN link may expire. Videos with separate audio and video streams are combined into an MP4 in your browser. Some formats may not be supported."],
       ],
     },
     troubleshooting: {
@@ -264,7 +266,7 @@ export const COPY = {
       steps: [
         ["Make sure the post opens", "Open the post in the same Edge or Chrome profile as the extension, then start playing the video."],
         ["Fetch a fresh link", "The extension reopens the post once automatically. If the item still fails, choose Retry in the queue."],
-        ["Check access and video format", "If 403 continues, confirm this account can view the post. Videos with separate audio and video streams cannot be saved as one file yet."],
+        ["Check access and video format", "If 403 continues, confirm this account can view the post. The extension combines separate audio and video streams in the browser, though some formats may not be supported."],
       ],
       note: "Queue export stores Facebook post URLs in a local file. Keep it private and do not share links to private posts.",
     },
@@ -296,11 +298,17 @@ const EXTENSION_TEXT_EN = {
   "ดาวน์โหลดไม่สำเร็จ — ตรวจลิงก์หรือการเข้าสู่ระบบ": "Download failed. Check the link and your Facebook sign-in.",
   "กำลังเปิดหน้า Facebook": "Opening Facebook post",
   "กำลังค้นหาลิงก์วิดีโอ": "Finding a video link",
+  "กำลังรวมภาพและเสียง": "Merging audio and video",
+  "รอคิวหลังเริ่มการรวมใหม่": "Queued to restart the merge",
+  "ลิงก์สตรีมวิดีโอหรือเสียงไม่ถูกต้อง": "The video or audio stream URL is invalid.",
+  "ไม่พบแทร็กภาพในสตรีมวิดีโอ": "No video track was found in the video stream.",
+  "ไม่พบแทร็กเสียงในสตรีมเสียง": "No audio track was found in the audio stream.",
+  "สร้างไฟล์วิดีโอที่มีเสียงไม่สำเร็จ": "Could not create a video file with audio.",
   "รอคิวหลังกลับมาเชื่อมต่อ": "Queued after reconnecting",
   "รอคิว": "Queued",
   "รอคิวอีกครั้ง": "Queued to retry",
   "เปิดแท็บ Facebook ไม่สำเร็จ": "Could not open the Facebook tab.",
-  "วิดีโอแยกภาพกับเสียง เว็บแอปยังรวมสตรีมไม่ได้": "This video has separate audio and video streams, which the app cannot combine yet.",
+  "วิดีโอแยกภาพกับเสียง เว็บแอปยังรวมสตรีมไม่ได้": "This older extension version could not combine the separate streams. Update the extension, then retry this item.",
   "ไม่พบลิงก์วิดีโอในหน้า Facebook กรุณาตรวจว่าเข้าสู่ระบบและเปิดวิดีโอได้": "No video link was found. Check that you are signed in and can play the post.",
   "ประมวลผลรายการนี้ไม่สำเร็จ": "Could not process this item.",
   "อ่านข้อมูลวิดีโอจากหน้า Facebook ไม่สำเร็จ": "Could not read video details from the Facebook page.",
@@ -339,6 +347,18 @@ function translateExtensionText(text) {
   if (!text) return "";
   if (!/[ก-๙]/.test(text)) return text;
   if (EXTENSION_TEXT_EN[text]) return EXTENSION_TEXT_EN[text];
+
+  const streamHttpError = text.match(/^(วิดีโอ|เสียง): Facebook CDN ตอบกลับ HTTP (\d+)$/);
+  if (streamHttpError) {
+    const stream = streamHttpError[1] === "วิดีโอ" ? "video" : "audio";
+    return `Facebook CDN returned HTTP ${streamHttpError[2]} for the ${stream} stream.`;
+  }
+
+  const oversizedStream = text.match(/^(วิดีโอ|เสียง): ไฟล์ใหญ่เกินขนาดที่รวมในเบราว์เซอร์ได้$/);
+  if (oversizedStream) return `The ${oversizedStream[1] === "วิดีโอ" ? "video" : "audio"} stream is too large to merge in this browser.`;
+
+  const unsupportedStream = text.match(/^เบราว์เซอร์ไม่รองรับรูปแบบสตรีม(ภาพ|เสียง)นี้สำหรับการรวมแบบไม่แปลงคุณภาพ$/);
+  if (unsupportedStream) return `This browser cannot merge the ${unsupportedStream[1] === "ภาพ" ? "video" : "audio"} stream without re-encoding it.`;
 
   const downloadMatch = text.match(/^กำลังดาวน์โหลด\s+(.+)$/);
   if (downloadMatch) return `Downloading ${downloadMatch[1]}`;

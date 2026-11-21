@@ -19,10 +19,10 @@
 
 - React/Vite app source is in `src/`.
 - Keep Thai and English UI copy in sync in `src/i18n.js`. The Thai page is pre-rendered at `/` and English at `/en/`; update metadata, language alternates, and sitemap when adding locales. The selected language is reflected in `<html lang>` and persisted in local storage.
-- `browser-extension/` contains the MV3 extension. `bridge.js` relays same-origin messages; `background.js` validates and processes the queue; `facebook-page.js` reads the loaded post DOM; `video-parser.js` extracts media URLs.
+- `browser-extension/` contains the MV3 extension. `bridge.js` relays same-origin messages; `background.js` validates and processes the queue; `facebook-page.js` reads the loaded post DOM; `video-parser.js` extracts media URLs; `offscreen.js` uses Mediabunny to combine separate audio/video streams locally. `scripts/package-extension.mjs` bundles this offscreen entry into the ignored `offscreen.bundle.js` before packaging it.
 - The website offers a downloadable extension ZIP at `/downloads/facebook-video-loader-extension.zip`. `scripts/package-extension.mjs` packages the current `browser-extension/` files before dev/build, and its output under `public/downloads/` is generated and ignored by Git.
 - The extension must not open browser-internal `view-source:` pages. Read the loaded Facebook page using its isolated content script.
-- Local use: load `browser-extension/` unpacked in the same Edge/Chrome profile as Facebook, then visit `http://127.0.0.1:4173/` or the Vite dev URL.
+- Local use: run `npm run package:extension` before loading `browser-extension/` unpacked in the same Edge/Chrome profile as Facebook, then visit `http://127.0.0.1:4173/` or the Vite dev URL.
 - Production use: Vercel builds the app at the domain root using `vercel.json` and `npm run build:vercel`. The current production origin is `https://facedownload.vercel.app/`; keep its exact host in the extension manifest and sender validation synchronized. GitHub Pages remains an optional legacy build target at `/facedownload/`.
 - `scripts/prerender.mjs` hydrates static HTML from the React server entry after Vite builds `dist/client`. Keep `src/entry-server.jsx` and the SSR step in both production build scripts.
 - Never build or publish an EXE. `src-tauri/` may contain ignored legacy local files; do not add it to source control.

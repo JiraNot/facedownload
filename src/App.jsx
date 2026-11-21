@@ -100,7 +100,7 @@ export function App({ initialLanguage = "th" }) {
     }
   }
 
-  const extensionNeedsUpdate = extensionAvailable && (!extensionVersion || compareVersions(extensionVersion, "1.3.0") < 0);
+  const extensionNeedsUpdate = extensionAvailable && (!extensionVersion || compareVersions(extensionVersion, "1.4.0") < 0);
 
   useEffect(() => {
     function receive(event) {
@@ -257,7 +257,7 @@ export function App({ initialLanguage = "th" }) {
     setQueueFeedback(`ส่งออกลิงก์คิว ${links.length} รายการแล้ว`);
   }
 
-  const activeCount = queueItems.filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status)).length;
+  const activeCount = queueItems.filter((item) => ["queued", "opening", "searching", "merging", "downloading"].includes(item.status)).length;
   const finishedCount = queueItems.filter((item) => ["complete", "failed"].includes(item.status)).length;
   const extensionDownloadUrl = `${import.meta.env.BASE_URL}downloads/facebook-video-loader-extension.zip`;
 

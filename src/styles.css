@@ -93,7 +93,7 @@ a { color: inherit; }
 .queue-item-label { overflow: hidden; color: #d4dfef; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .queue-item-state { display: flex; align-items: center; gap: 6px; overflow: hidden; color: #8090a5; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .queue-item-state i { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #7b8798; }
-.status-opening .queue-item-state i, .status-searching .queue-item-state i { background: #e9ae45; animation: pulse 1s infinite alternate; }
+.status-opening .queue-item-state i, .status-searching .queue-item-state i, .status-merging .queue-item-state i { background: #e9ae45; animation: pulse 1s infinite alternate; }
 .status-downloading .queue-item-state i { background: #4b9dff; box-shadow: 0 0 9px #378aff88; animation: pulse 1s infinite alternate; }
 .status-complete .queue-item-state i { background: #39c586; }
 .status-failed .queue-item-state i { background: #f07171; }

@@ -4,6 +4,7 @@ const QUEUE_PAUSED_KEY = "facebookVideoLoaderQueuePaused";
 const MAX_QUEUE_SIZE = 50;
 const QUALITY_PREFERENCES = new Set(["auto", "1080", "720", "360"]);
 const FILENAME_PATTERNS = new Set(["title", "date-title", "title-id"]);
+const OFFSCREEN_PATH = "offscreen.html";
 let queueRunner = null;
 
 function delay(ms) {
@@ -104,6 +105,45 @@ function waitForTabComplete(tabId, timeoutMs = 45000) {
   });
 }
 
+async function isOffscreenDocumentOpen() {
+  const documentUrl = chrome.runtime.getURL(OFFSCREEN_PATH);
+  if (typeof chrome.runtime.getContexts === "function") {
+    const contexts = await chrome.runtime.getContexts({
+      contextTypes: ["OFFSCREEN_DOCUMENT"],
+      documentUrls: [documentUrl],
+    });
+    return contexts.length > 0;
+  }
+  if (typeof chrome.offscreen?.hasDocument === "function") return chrome.offscreen.hasDocument();
+  return false;
+}
+
+async function ensureOffscreenDocument() {
+  if (await isOffscreenDocumentOpen()) return;
+  await chrome.offscreen.createDocument({
+    url: OFFSCREEN_PATH,
+    reasons: ["BLOBS"],
+    justification: "Combine a Facebook video and its matching audio stream locally in the browser.",
+  }).catch(async (error) => {
+    if (await isOffscreenDocumentOpen()) return;
+    throw error;
+  });
+}
+
+async function askOffscreen(message) {
+  await ensureOffscreenDocument();
+  return chrome.runtime.sendMessage({ target: "offscreen", ...message });
+}
+
+function revokeMergedObjectUrl(objectUrl) {
+  if (!objectUrl) return;
+  void chrome.runtime.sendMessage({
+    target: "offscreen",
+    type: "MEDIA_REVOKE_URL",
+    objectUrl,
+  }).catch(() => {});
+}
+
 async function extractVideoFromTab(tabId) {
   await delay(1000);
   let lastError;
@@ -145,15 +185,20 @@ async function finishDownload(downloadId, state, errorCode = "") {
   if (!item) return;
 
   if (state === "interrupted" && errorCode === "SERVER_FORBIDDEN" && (item.freshUrlRetry || 0) < 1) {
+    revokeMergedObjectUrl(item.objectUrl);
     await setQueueItem(item.id, {
       status: "queued",
       detail: "ลิงก์ CDN หมดอายุ (403) กำลังเปิดโพสต์เพื่อหาลิงก์ใหม่",
       downloadId: null,
+      objectUrl: null,
+      mergeJobId: null,
       freshUrlRetry: 1,
     });
     startQueueRunner();
     return;
   }
+
+  revokeMergedObjectUrl(item.objectUrl);
 
   const detail = state === "complete"
     ? "เสร็จแล้ว"
@@ -166,6 +211,8 @@ async function finishDownload(downloadId, state, errorCode = "") {
     status: state === "complete" ? "complete" : "failed",
     detail,
     downloadId: null,
+    objectUrl: null,
+    mergeJobId: null,
   });
   startQueueRunner();
 }
@@ -176,14 +223,22 @@ chrome.downloads.onChanged.addListener((delta) => {
 });
 
 function chooseMedia(results, preference) {
-  const available = results.filter((result) => result.videoUrl && (!result.audioUrl || result.audioUrl === result.videoUrl));
+  const muxed = results.filter((result) => result.videoUrl && (!result.audioUrl || result.audioUrl === result.videoUrl));
+  const separate = results.filter((result) => result.videoUrl && result.audioUrl && result.audioUrl !== result.videoUrl);
+  const available = [...muxed, ...separate];
   if (!available.length) return { media: null, preferenceUnavailable: false };
-  if (!preference || preference === "auto") return { media: available[0], preferenceUnavailable: false };
+  if (!preference || preference === "auto") {
+    const media = muxed[0] || separate[0];
+    return { media, preferenceUnavailable: false, requiresMerge: Boolean(media.audioUrl && media.audioUrl !== media.videoUrl) };
+  }
 
   const wanted = available.find((result) => new RegExp(`(?:^|\\D)${preference}p`, "i").test(result.quality));
-  return wanted
-    ? { media: wanted, preferenceUnavailable: false }
-    : { media: available[0], preferenceUnavailable: true };
+  const media = wanted || muxed[0] || separate[0];
+  return {
+    media,
+    preferenceUnavailable: !wanted,
+    requiresMerge: Boolean(media.audioUrl && media.audioUrl !== media.videoUrl),
+  };
 }
 
 function buildDownloadBaseName(title, item) {
@@ -211,16 +266,38 @@ async function processOne(item) {
 
     const page = await extractVideoFromTab(tabId);
     const preference = QUALITY_PREFERENCES.has(item.qualityPreference) ? item.qualityPreference : "auto";
-    const { media, preferenceUnavailable } = chooseMedia(page.results, preference);
+    const { media, preferenceUnavailable, requiresMerge } = chooseMedia(page.results, preference);
     if (!media) {
-      if (page.results.some((result) => result.audioUrl && result.audioUrl !== result.videoUrl)) {
-        throw new Error("วิดีโอแยกภาพกับเสียง เว็บแอปยังรวมสตรีมไม่ได้");
-      }
       throw new Error("ไม่พบลิงก์วิดีโอในหน้า Facebook กรุณาตรวจว่าเข้าสู่ระบบและเปิดวิดีโอได้");
     }
 
     const title = safeFilename(page.title, `facebook-video-${item.id.slice(0, 8)}`);
     const filename = buildDownloadBaseName(title, item);
+    if (requiresMerge) {
+      const mergeJobId = crypto.randomUUID();
+      await setQueueItem(item.id, {
+        status: "merging",
+        detail: "กำลังรวมภาพและเสียง",
+        title: page.title || title,
+        quality: media.quality,
+        filename,
+        downloadId: null,
+        objectUrl: null,
+        mergeJobId,
+      });
+      const started = await askOffscreen({
+        type: "MEDIA_MERGE_START",
+        jobId: mergeJobId,
+        itemId: item.id,
+        videoUrl: media.videoUrl,
+        audioUrl: media.audioUrl,
+      });
+      if (!started?.ok) throw new Error(started?.error || "เริ่มรวมเสียงกับวิดีโอไม่สำเร็จ");
+      await chrome.tabs.remove(tabId).catch(() => {});
+      tabId = undefined;
+      return;
+    }
+
     await chrome.tabs.remove(tabId).catch(() => {});
     tabId = undefined;
 
@@ -238,6 +315,8 @@ async function processOne(item) {
       title: page.title || title,
       quality: media.quality,
       downloadId,
+      objectUrl: null,
+      mergeJobId: null,
     });
     const [download] = await chrome.downloads.search({ id: downloadId });
     if (download?.state === "complete" || download?.state === "interrupted") {
@@ -248,6 +327,8 @@ async function processOne(item) {
       status: "failed",
       detail: String(error?.message || "ประมวลผลรายการนี้ไม่สำเร็จ").slice(0, 180),
       downloadId: null,
+      objectUrl: null,
+      mergeJobId: null,
     });
   } finally {
     if (typeof tabId === "number") await chrome.tabs.remove(tabId).catch(() => {});
@@ -258,21 +339,137 @@ async function recoverInterruptedWork() {
   const queue = await readQueue();
   let changed = false;
   const recovered = queue.map((item) => {
-    if (item.status === "opening" || item.status === "searching") {
+    if (item.status === "opening" || item.status === "searching" || (item.status === "merging" && !item.mergeJobId)) {
       changed = true;
-      return { ...item, status: "queued", detail: "รอคิวหลังกลับมาเชื่อมต่อ", updatedAt: Date.now() };
+      return { ...item, status: "queued", detail: "รอคิวหลังกลับมาเชื่อมต่อ", mergeJobId: null, updatedAt: Date.now() };
     }
     return item;
   });
   if (changed) await writeQueue(recovered);
+
+  const mergingItems = recovered.filter((item) => item.status === "merging" && item.mergeJobId);
+  if (!mergingItems.length) return;
+
+  let states = {};
+  if (await isOffscreenDocumentOpen()) {
+    const status = await chrome.runtime.sendMessage({
+      target: "offscreen",
+      type: "MEDIA_MERGE_CHECK",
+      jobIds: mergingItems.map((item) => item.mergeJobId),
+    }).catch(() => null);
+    states = status?.states || {};
+  }
+
+  const restartIds = [];
+  for (const item of mergingItems) {
+    const state = states[item.mergeJobId];
+    if (state?.state === "running") continue;
+    if (state?.state === "complete" && state.objectUrl) {
+      await startMergedDownload(item.id, item.mergeJobId, state.objectUrl);
+      continue;
+    }
+    if (state?.state === "failed") {
+      await handleMergeFailure(item.id, item.mergeJobId, state.error, state.errorCode);
+      continue;
+    }
+    restartIds.push(item.id);
+  }
+
+  if (restartIds.length) {
+    const currentQueue = await readQueue();
+    const retryQueue = currentQueue.map((item) => restartIds.includes(item.id)
+      ? { ...item, status: "queued", detail: "รอคิวหลังเริ่มการรวมใหม่", mergeJobId: null, updatedAt: Date.now() }
+      : item
+    );
+    await writeQueue(retryQueue);
+  }
 }
+
+async function startMergedDownload(itemId, jobId, objectUrl) {
+  const queue = await readQueue();
+  const item = queue.find((entry) => entry.id === itemId && entry.status === "merging" && entry.mergeJobId === jobId);
+  if (!item) {
+    revokeMergedObjectUrl(objectUrl);
+    return;
+  }
+
+  try {
+    const filename = safeFilename(item.filename, `facebook-video-${item.id.slice(0, 8)}`);
+    const downloadId = await chrome.downloads.download({
+      url: objectUrl,
+      filename: `Facebook Video Loader/${filename}.mp4`,
+      conflictAction: "uniquify",
+      saveAs: false,
+    });
+    await setQueueItem(item.id, {
+      status: "downloading",
+      detail: `กำลังดาวน์โหลด ${item.quality || "วิดีโอ"}`,
+      downloadId,
+      objectUrl,
+      mergeJobId: null,
+    });
+    const [download] = await chrome.downloads.search({ id: downloadId });
+    if (download?.state === "complete" || download?.state === "interrupted") {
+      await finishDownload(downloadId, download.state, download.error || "");
+    }
+  } catch (error) {
+    revokeMergedObjectUrl(objectUrl);
+    await setQueueItem(item.id, {
+      status: "failed",
+      detail: String(error?.message || "เริ่มดาวน์โหลดไฟล์ที่รวมแล้วไม่สำเร็จ").slice(0, 180),
+      downloadId: null,
+      objectUrl: null,
+      mergeJobId: null,
+    });
+    startQueueRunner();
+  }
+}
+
+async function handleMergeFailure(itemId, jobId, detail, errorCode = "") {
+  const queue = await readQueue();
+  const item = queue.find((entry) => entry.id === itemId && entry.status === "merging" && entry.mergeJobId === jobId);
+  if (!item) return;
+
+  if (errorCode === "SERVER_FORBIDDEN" && (item.freshUrlRetry || 0) < 1) {
+    await setQueueItem(item.id, {
+      status: "queued",
+      detail: "ลิงก์ CDN หมดอายุ (403) กำลังเปิดโพสต์เพื่อหาลิงก์ใหม่",
+      mergeJobId: null,
+      freshUrlRetry: 1,
+    });
+  } else {
+    await setQueueItem(item.id, {
+      status: "failed",
+      detail: String(detail || "รวมสตรีมวิดีโอไม่สำเร็จ").slice(0, 180),
+      mergeJobId: null,
+    });
+  }
+  startQueueRunner();
+}
+
+function isOffscreenSender(sender) {
+  return sender.url === chrome.runtime.getURL(OFFSCREEN_PATH);
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!isOffscreenSender(sender)) return;
+  if (message?.type === "MEDIA_MERGE_COMPLETE") {
+    void startMergedDownload(message.itemId, message.jobId, message.objectUrl).then(() => sendResponse({ ok: true }));
+    return true;
+  }
+  if (message?.type === "MEDIA_MERGE_FAILED") {
+    void handleMergeFailure(message.itemId, message.jobId, message.error, message.errorCode)
+      .then(() => sendResponse({ ok: true }));
+    return true;
+  }
+});
 
 async function drainQueue() {
   await recoverInterruptedWork();
   while (true) {
     if (await readPaused()) return;
     const queue = await readQueue();
-    if (queue.some((item) => item.status === "downloading")) return;
+    if (queue.some((item) => ["downloading", "merging"].includes(item.status))) return;
     const next = queue.find((item) => item.status === "queued");
     if (!next) return;
     await processOne(next);
@@ -284,8 +481,8 @@ function startQueueRunner() {
   queueRunner = drainQueue().catch(() => {}).finally(() => {
     queueRunner = null;
     void readQueue().then((queue) => {
-      const hasActiveDownload = queue.some((item) => item.status === "downloading");
-      if (!hasActiveDownload && queue.some((item) => item.status === "queued")) {
+      const hasActiveWork = queue.some((item) => ["downloading", "merging"].includes(item.status));
+      if (!hasActiveWork && queue.some((item) => item.status === "queued")) {
         void readPaused().then((paused) => { if (!paused) startQueueRunner(); }).catch(() => {});
       }
     }).catch(() => {});
@@ -353,7 +550,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const queue = await readQueue();
       const paused = await readPaused();
-      if (!paused && !queueRunner && queue.some((item) => ["queued", "opening", "searching"].includes(item.status))) {
+      if (!paused && !queueRunner && queue.some((item) => ["queued", "opening", "searching", "merging"].includes(item.status))) {
         void startQueueRunner();
       }
       sendResponse({ available: true, queue, paused });

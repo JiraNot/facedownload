@@ -1,4 +1,6 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { build } from "esbuild";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { deflateRawSync } from "node:zlib";
 
@@ -80,34 +82,53 @@ function makeCentralHeader(name, content, compressed, offset) {
   return Buffer.concat([header, filename]);
 }
 
-const files = await listFiles(extensionRoot);
-if (!files.some(({ relativePath }) => relativePath === "manifest.json")) {
-  throw new Error("The extension package is missing manifest.json");
+const stageRoot = await mkdtemp(path.join(tmpdir(), "facebook-video-loader-extension-"));
+try {
+  await build({
+    entryPoints: [path.join(extensionRoot, "offscreen.js")],
+    bundle: true,
+    format: "iife",
+    target: "chrome109",
+    outfile: path.join(extensionRoot, "offscreen.bundle.js"),
+    legalComments: "inline",
+  });
+  await cp(extensionRoot, stageRoot, { recursive: true });
+  await cp(
+    path.resolve("node_modules/mediabunny/LICENSE"),
+    path.join(stageRoot, "LICENSE-mediabunny-MPL-2.0.txt"),
+  );
+
+  const files = await listFiles(stageRoot);
+  if (!files.some(({ relativePath }) => relativePath === "manifest.json")) {
+    throw new Error("The extension package is missing manifest.json");
+  }
+
+  const localParts = [];
+  const centralParts = [];
+  let localOffset = 0;
+  for (const file of files) {
+    const content = await readFile(file.absolutePath);
+    const compressed = deflateRawSync(content, { level: 9 });
+    const local = makeLocalHeader(file.relativePath, content, compressed);
+    localParts.push(local);
+    centralParts.push(makeCentralHeader(file.relativePath, content, compressed, localOffset));
+    localOffset += local.length;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(centralDirectory.length, 12);
+  end.writeUInt32LE(localOffset, 16);
+  end.writeUInt16LE(0, 20);
+
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, Buffer.concat([...localParts, centralDirectory, end]));
+  console.log(`Packaged Facebook Video Loader extension v${manifest.version} (${files.length} files)`);
+} finally {
+  await rm(stageRoot, { recursive: true, force: true });
 }
-
-const localParts = [];
-const centralParts = [];
-let localOffset = 0;
-for (const file of files) {
-  const content = await readFile(file.absolutePath);
-  const compressed = deflateRawSync(content, { level: 9 });
-  const local = makeLocalHeader(file.relativePath, content, compressed);
-  localParts.push(local);
-  centralParts.push(makeCentralHeader(file.relativePath, content, compressed, localOffset));
-  localOffset += local.length;
-}
-
-const centralDirectory = Buffer.concat(centralParts);
-const end = Buffer.alloc(22);
-end.writeUInt32LE(0x06054b50, 0);
-end.writeUInt16LE(0, 4);
-end.writeUInt16LE(0, 6);
-end.writeUInt16LE(files.length, 8);
-end.writeUInt16LE(files.length, 10);
-end.writeUInt32LE(centralDirectory.length, 12);
-end.writeUInt32LE(localOffset, 16);
-end.writeUInt16LE(0, 20);
-
-await mkdir(path.dirname(outputPath), { recursive: true });
-await writeFile(outputPath, Buffer.concat([...localParts, centralDirectory, end]));
-console.log(`Packaged Facebook Video Loader extension v${manifest.version} (${files.length} files)`);
