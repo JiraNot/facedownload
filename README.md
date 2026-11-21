@@ -22,7 +22,7 @@ production URL ปัจจุบันคือ `https://facedownload.vercel.ap
 
 `https://jiranot.github.io/facedownload/` ยังเป็น fallback สำหรับ build GitHub Pages เดิม (`npm run build:pages`).
 
-หน้า HTML จะ pre-render เนื้อหาคำแนะนำและ FAQ ไว้ใน source เพื่อให้ crawler อ่านได้ก่อน JavaScript ทำงาน มี title/description, canonical URL, sitemap และ `WebApplication` structured data การเตรียมข้อมูลนี้ช่วยให้ค้นพบและเข้าใจหน้าได้ แต่ไม่รับประกันอันดับหรือการแสดงผลใน Google/AI Search.
+เว็บไซต์รองรับภาษาไทยที่ `/` และภาษาอังกฤษที่ `/en/` มีปุ่ม TH/EN บนแถบเมนูและจดจำภาษาที่เลือกไว้ในเบราว์เซอร์ เนื้อหา metadata, canonical, alternate language links และ sitemap ถูก pre-render แยกสำหรับทั้งสองภาษา การเตรียมข้อมูลนี้ช่วยให้ crawler อ่านเนื้อหาได้ แต่ไม่รับประกันอันดับหรือการแสดงผลใน Google/AI Search.
 
 ## พฤติกรรมคิว
 

@@ -16,6 +16,7 @@
 ## Architecture
 
 - React/Vite app source is in `src/`.
+- Keep Thai and English UI copy in sync in `src/i18n.js`. The Thai page is pre-rendered at `/` and English at `/en/`; update metadata, language alternates, and sitemap when adding locales. The selected language is reflected in `<html lang>` and persisted in local storage.
 - `browser-extension/` contains the MV3 extension. `bridge.js` relays same-origin messages; `background.js` validates and processes the queue; `facebook-page.js` reads the loaded post DOM; `video-parser.js` extracts media URLs.
 - The website offers a downloadable extension ZIP at `/downloads/facebook-video-loader-extension.zip`. `scripts/package-extension.mjs` packages the current `browser-extension/` files before dev/build, and its output under `public/downloads/` is generated and ignored by Git.
 - The extension must not open browser-internal `view-source:` pages. Read the loaded Facebook page using its isolated content script.
