@@ -16,7 +16,7 @@
 
 สคริปต์ prerender ใช้ `VITE_VERCEL_PROJECT_PRODUCTION_URL` ที่ Vercel กำหนดให้สร้าง canonical URL, sitemap และ robots.txt ตาม production domain หากใช้ custom domain ให้เพิ่ม `VITE_SITE_URL` เป็น URL แบบ HTTPS ใน Project Environment Variables เพื่อให้ metadata ชี้ไปยังโดเมนหลักที่ต้องการ
 
-หลัง Vercel แสดง production URL แล้ว ให้นำ origin และ base path ของ URL นั้นไปเพิ่มใน `browser-extension/manifest.json` และ `browser-extension/background.js` ก่อนโหลดส่วนขยายใหม่ เพื่อให้เว็บแอปสื่อสารกับส่วนขยายได้
+production URL ปัจจุบันคือ `https://facedownload.vercel.app/` และได้เพิ่ม origin นี้ใน `browser-extension/manifest.json` กับ `browser-extension/background.js` แล้ว หลังดึงโค้ดรุ่นใหม่ให้ reload ส่วนขยายในหน้า Extensions เพื่อให้เว็บแอปสื่อสารกับส่วนขยายได้
 
 `https://jiranot.github.io/facedownload/` ยังเป็น fallback สำหรับ build GitHub Pages เดิม (`npm run build:pages`).
 

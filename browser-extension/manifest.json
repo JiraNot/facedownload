@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Facebook Video Loader",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Find and download Facebook videos sequentially in the signed-in browser profile.",
   "permissions": ["downloads", "storage"],
   "host_permissions": [
@@ -13,14 +13,15 @@
     "https://*.fb.gg/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
-    "https://jiranot.github.io/*"
+    "https://jiranot.github.io/*",
+    "https://facedownload.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost/*", "http://127.0.0.1/*", "https://jiranot.github.io/facedownload/*"],
+      "matches": ["http://localhost/*", "http://127.0.0.1/*", "https://jiranot.github.io/facedownload/*", "https://facedownload.vercel.app/*"],
       "js": ["bridge.js"],
       "run_at": "document_start"
     },

@@ -33,7 +33,8 @@ function isAppSender(sender) {
   try {
     const url = new URL(sender.url || "");
     return (url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)) ||
-      (url.protocol === "https:" && url.hostname === "jiranot.github.io" && url.pathname.startsWith("/facedownload/"));
+      (url.protocol === "https:" && url.hostname === "jiranot.github.io" && url.pathname.startsWith("/facedownload/")) ||
+      (url.protocol === "https:" && url.hostname === "facedownload.vercel.app");
   } catch {
     return false;
   }

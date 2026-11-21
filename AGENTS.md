@@ -19,7 +19,7 @@
 - `browser-extension/` contains the MV3 extension. `bridge.js` relays same-origin messages; `background.js` validates and processes the queue; `facebook-page.js` reads the loaded post DOM; `video-parser.js` extracts media URLs.
 - The extension must not open browser-internal `view-source:` pages. Read the loaded Facebook page using its isolated content script.
 - Local use: load `browser-extension/` unpacked in the same Edge/Chrome profile as Facebook, then visit `http://127.0.0.1:4173/` or the Vite dev URL.
-- Production use: Vercel builds the app at the domain root using `vercel.json` and `npm run build:vercel`. Once the production domain is assigned, keep its exact host/path in the extension manifest and sender validation synchronized. GitHub Pages remains an optional legacy build target at `/facedownload/`.
+- Production use: Vercel builds the app at the domain root using `vercel.json` and `npm run build:vercel`. The current production origin is `https://facedownload.vercel.app/`; keep its exact host in the extension manifest and sender validation synchronized. GitHub Pages remains an optional legacy build target at `/facedownload/`.
 - `scripts/prerender.mjs` hydrates static HTML from the React server entry after Vite builds `dist/client`. Keep `src/entry-server.jsx` and the SSR step in both production build scripts.
 - Never build or publish an EXE. `src-tauri/` may contain ignored legacy local files; do not add it to source control.
 
