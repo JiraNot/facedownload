@@ -10,6 +10,8 @@
 4. เปิดเว็บแอปและรีเฟรชหน้า
 5. วางลิงก์ทีละหลายรายการหรือทยอยเพิ่มรายการ แล้วเลือก **เพิ่มเข้าคิว**
 
+ดาวน์โหลดไฟล์ส่วนขยายได้จากปุ่ม **ดาวน์โหลดส่วนขยาย** บนหน้าเว็บ แล้วแตกไฟล์ ZIP ไปยังโฟลเดอร์ที่ต้องการ ใน Edge/Chrome เปิด Developer mode เลือก **Load unpacked** และเลือกโฟลเดอร์ที่มี `manifest.json` จากนั้นเปิดเว็บแอปในโปรไฟล์เดียวกัน
+
 ## เผยแพร่ด้วย Vercel
 
 นำ repository `JiraNot/facedownload` เข้า Vercel โดยเลือก framework preset เป็น Vite (หรือให้ Vercel ตรวจจับอัตโนมัติ) ค่า build ถูกกำหนดไว้ใน `vercel.json` แล้ว: ติดตั้งด้วย `npm ci`, รัน `npm run build:vercel` และเผยแพร่โฟลเดอร์ `dist/client`. เมื่อเชื่อม GitHub แล้ว การ push เข้า `main` จะสร้าง production deployment และ branch อื่นจะสร้าง preview deployment.
@@ -41,6 +43,7 @@ production URL ปัจจุบันคือ `https://facedownload.vercel.ap
 ## คำสั่งพัฒนา
 
 - `npm run dev` — เปิดเซิร์ฟเวอร์พัฒนา
+- `npm run package:extension` — สร้าง ZIP ส่วนขยายลงใน `public/downloads/`
 - `npm run build` — build สำหรับ local preview และ Sites handoff
 - `npm run build:pages` — build โดยใช้ base path ของ GitHub Pages
 - `npm run build:vercel` — build เว็บพร้อม prerender สำหรับ Vercel

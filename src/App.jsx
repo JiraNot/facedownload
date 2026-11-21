@@ -129,6 +129,9 @@ export function App() {
         <nav className="header-nav" aria-label="เมนูหลัก">
           <a href="#how-it-works">วิธีใช้งาน</a>
           <a href="#faq">คำถามที่พบบ่อย</a>
+          <a className="header-download-link" href={`${import.meta.env.BASE_URL}downloads/facebook-video-loader-extension.zip`} download>
+            ดาวน์โหลดส่วนขยาย
+          </a>
         </nav>
       </header>
 
@@ -232,6 +235,33 @@ export function App() {
 
             <p className="privacy-note">ใช้กับวิดีโอที่คุณมีสิทธิ์ดูและบันทึก · ไม่ต้องกรอกรหัสผ่าน Facebook ในเว็บนี้</p>
           </section>
+        </section>
+
+        <section className="extension-section" id="install" aria-labelledby="extension-title">
+          <div className="extension-intro">
+            <span className="eyebrow">เริ่มต้นใช้งาน</span>
+            <h2 id="extension-title">ดาวน์โหลดส่วนขยาย</h2>
+            <p>ติดตั้งในโปรไฟล์ Edge หรือ Chrome ที่ล็อกอิน Facebook เพื่อเชื่อมคิวกับเบราว์เซอร์</p>
+            <a className="extension-download-button" href={`${import.meta.env.BASE_URL}downloads/facebook-video-loader-extension.zip`} download>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5v9m0 0 3.5-3.5M10 11.5 6.5 8M3.5 13.5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2" /></svg>
+              ดาวน์โหลด Extension
+            </a>
+            <p className="extension-download-note">ไฟล์ ZIP สำหรับติดตั้งแบบ Load unpacked</p>
+          </div>
+          <ol className="extension-install-steps">
+            <li>
+              <span className="install-step-number">01</span>
+              <div><strong>ดาวน์โหลดและแตกไฟล์</strong><p>แตก ZIP ไว้ในโฟลเดอร์ที่ต้องการเก็บส่วนขยาย</p></div>
+            </li>
+            <li>
+              <span className="install-step-number">02</span>
+              <div><strong>เปิดหน้าส่วนขยาย</strong><p>ใช้ <code>chrome://extensions</code> หรือ <code>edge://extensions</code></p></div>
+            </li>
+            <li>
+              <span className="install-step-number">03</span>
+              <div><strong>โหลดส่วนขยายเข้าเบราว์เซอร์</strong><p>เปิด Developer mode เลือก Load unpacked แล้วเลือกโฟลเดอร์ที่มี <code>manifest.json</code></p></div>
+            </li>
+          </ol>
         </section>
 
         <AdSenseSlot placement="TOOL" label="โฆษณา" />
