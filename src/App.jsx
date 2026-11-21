@@ -15,6 +15,16 @@ function isFacebookPageUrl(value) {
   }
 }
 
+function compareVersions(first, second) {
+  const a = String(first).split(".").map(Number);
+  const b = String(second).split(".").map(Number);
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    const difference = (a[index] || 0) - (b[index] || 0);
+    if (difference !== 0) return Math.sign(difference);
+  }
+  return 0;
+}
+
 function postToExtension(type, extra = {}) {
   window.postMessage({
     source: "facebook-video-loader-web",
@@ -24,15 +34,33 @@ function postToExtension(type, extra = {}) {
   }, window.location.origin);
 }
 
+const GUIDE_ICON_CONTENT = {
+  download: <><path d="M12 3v11m0 0 4-4m-4 4-4-4" /><path d="M4 17v3h16v-3" /></>,
+  browser: <><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M3.5 9h17M7 6.8h.01M10 6.8h.01" /></>,
+  folder: <><path d="M3 7.5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M3.5 10h17" /></>,
+  access: <><path d="m12 3 7 3v5c0 4.5-2.8 8-7 10-4.2-2-7-5.5-7-10V6z" /><path d="m9 11 2 2 4-4" /></>,
+  refresh: <><path d="M20 7v5h-5" /><path d="M19 12a7 7 0 0 0-12-4L5 10m-1 7v-5h5" /><path d="M5 12a7 7 0 0 0 12 4l2-2" /></>,
+  warning: <><path d="M10.3 4.6 2.9 17.4A1.8 1.8 0 0 0 4.5 20h15a1.8 1.8 0 0 0 1.6-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4m0 3h.01" /></>,
+};
+
+function GuideIcon({ name }) {
+  return <svg className="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{GUIDE_ICON_CONTENT[name]}</svg>;
+}
+
 export function App({ initialLanguage = "th" }) {
   const [language, setLanguage] = useState(initialLanguage);
   const [queueText, setQueueText] = useState("");
   const [queueItems, setQueueItems] = useState([]);
   const [queuePaused, setQueuePaused] = useState(false);
   const [extensionAvailable, setExtensionAvailable] = useState(false);
+  const [extensionVersion, setExtensionVersion] = useState("");
   const [queueFeedback, setQueueFeedback] = useState("");
   const [queueSubmitting, setQueueSubmitting] = useState(false);
+  const [qualityPreference, setQualityPreference] = useState("auto");
+  const [filenamePattern, setFilenamePattern] = useState("title");
   const requestRef = useRef("");
+  const importInputRef = useRef(null);
+  const clearQueueTextAfterAddRef = useRef(false);
   const copy = COPY[language];
 
   useEffect(() => {
@@ -72,6 +100,8 @@ export function App({ initialLanguage = "th" }) {
     }
   }
 
+  const extensionNeedsUpdate = extensionAvailable && (!extensionVersion || compareVersions(extensionVersion, "1.3.0") < 0);
+
   useEffect(() => {
     function receive(event) {
       if (event.source !== window || event.origin !== window.location.origin) return;
@@ -79,6 +109,7 @@ export function App({ initialLanguage = "th" }) {
       if (message?.source !== "facebook-video-loader-extension") return;
 
       setExtensionAvailable(Boolean(message.available));
+      if (typeof message.version === "string") setExtensionVersion(message.version);
       if (message.type === "PING_RESULT") return;
 
       if (Array.isArray(message.queue)) setQueueItems(message.queue);
@@ -87,7 +118,8 @@ export function App({ initialLanguage = "th" }) {
       if (message.type === "QUEUE_ADD_RESULT" && message.requestId === requestRef.current) {
         requestRef.current = "";
         setQueueSubmitting(false);
-        if (!message.error) setQueueText("");
+        if (!message.error && clearQueueTextAfterAddRef.current) setQueueText("");
+        clearQueueTextAfterAddRef.current = false;
         const notes = [message.error];
         if (!message.error && message.addedCount) notes.push(`เพิ่ม ${message.addedCount} รายการเข้าคิวแล้ว`);
         if (message.duplicateCount) notes.push(`ข้ามลิงก์ซ้ำ ${message.duplicateCount} รายการ`);
@@ -113,18 +145,24 @@ export function App({ initialLanguage = "th" }) {
     };
   }, []);
 
-  function addQueueItems(event) {
-    event.preventDefault();
-    const urls = [...new Set(queueText.split(/[\s,;]+/).map((value) => value.trim()).filter(Boolean))];
-    if (!urls.length) {
-      setQueueFeedback("วางลิงก์ Facebook อย่างน้อยหนึ่งรายการก่อนเพิ่มเข้าคิว");
+  function enqueueUrls(values, { clearInput = false } = {}) {
+    const candidates = values.map((value) => typeof value === "string"
+      ? { url: value.trim(), qualityPreference, filenamePattern }
+      : {
+        url: String(value?.url || "").trim(),
+        qualityPreference: value?.qualityPreference,
+        filenamePattern: value?.filenamePattern,
+      }).filter((value) => value.url);
+    const uniqueItems = [...new Map(candidates.map((item) => [item.url, item])).values()];
+    if (!uniqueItems.length) {
+      setQueueFeedback(copy.queue.emptyInput);
       return;
     }
 
-    const invalidCount = urls.filter((url) => !isFacebookPageUrl(url)).length;
-    const validUrls = urls.filter(isFacebookPageUrl);
-    if (!validUrls.length) {
-      setQueueFeedback("ไม่พบลิงก์ Facebook ที่ถูกต้องในรายการ");
+    const invalidCount = uniqueItems.filter((item) => !isFacebookPageUrl(item.url)).length;
+    const validItems = uniqueItems.filter((item) => isFacebookPageUrl(item.url));
+    if (!validItems.length) {
+      setQueueFeedback(copy.queue.invalidInput);
       return;
     }
     if (!extensionAvailable) {
@@ -134,16 +172,89 @@ export function App({ initialLanguage = "th" }) {
 
     const requestId = crypto.randomUUID();
     requestRef.current = requestId;
+    clearQueueTextAfterAddRef.current = clearInput;
     setQueueSubmitting(true);
     setQueueFeedback("กำลังเพิ่มรายการเข้าคิว…");
-    postToExtension("QUEUE_ADD", { requestId, urls: validUrls, invalidCount });
+    postToExtension("QUEUE_ADD", {
+      requestId,
+      urls: validItems,
+      invalidCount,
+      qualityPreference,
+      filenamePattern,
+    });
     window.setTimeout(() => {
       if (requestRef.current === requestId) {
         requestRef.current = "";
+        clearQueueTextAfterAddRef.current = false;
         setQueueSubmitting(false);
         setQueueFeedback("ส่วนขยายไม่ตอบกลับ ลองรีเฟรชเว็บแอปหลังเปิดส่วนขยาย");
       }
     }, 10000);
+  }
+
+  function addQueueItems(event) {
+    event.preventDefault();
+    enqueueUrls(queueText.split(/[\s,;]+/), { clearInput: true });
+  }
+
+  async function importQueueFile(event) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+
+    try {
+      if (file.size > 256 * 1024) throw new Error("file too large");
+      const text = await file.text();
+      let entries;
+      if (file.name.toLowerCase().endsWith(".txt")) {
+        entries = text.split(/[\s,;]+/);
+      } else {
+        const exported = JSON.parse(text);
+        if (Array.isArray(exported)) entries = exported;
+        else if (exported?.format === "facebook-video-loader-queue" && Array.isArray(exported.links)) entries = exported.links;
+        else throw new Error("unsupported format");
+      }
+      if (!entries.some((entry) => typeof entry === "string" ? entry.trim() : typeof entry?.url === "string" && entry.url.trim())) {
+        throw new Error("no links");
+      }
+      enqueueUrls(entries);
+    } catch {
+      setQueueFeedback(copy.queue.importInvalid);
+    }
+  }
+
+  function exportQueue() {
+    const links = queueItems
+      .filter((item) => item.status !== "complete")
+      .map((item) => item.url)
+      .filter(Boolean);
+    if (!links.length) {
+      setQueueFeedback(copy.queue.exportEmpty);
+      return;
+    }
+
+    const payload = {
+      format: "facebook-video-loader-queue",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      links: queueItems
+        .filter((item) => item.status !== "complete" && item.url)
+        .map((item) => ({
+          url: item.url,
+          qualityPreference: item.qualityPreference || "auto",
+          filenamePattern: item.filenamePattern || "title",
+        })),
+    };
+    const file = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const downloadUrl = URL.createObjectURL(file);
+    const anchor = document.createElement("a");
+    anchor.href = downloadUrl;
+    anchor.download = `facebook-video-loader-queue-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    setQueueFeedback(`ส่งออกลิงก์คิว ${links.length} รายการแล้ว`);
   }
 
   const activeCount = queueItems.filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status)).length;
@@ -192,10 +303,31 @@ export function App({ initialLanguage = "th" }) {
               </div>
             </div>
 
-            <div className={`login-note ${extensionAvailable ? "is-ready" : ""}`} role="status">
-              {extensionAvailable
-                ? copy.queue.readyNote
-                : copy.queue.missingNote}
+            <div className={`login-note ${extensionAvailable ? extensionNeedsUpdate ? "is-outdated" : "is-ready" : ""}`} role="status">
+              {!extensionAvailable
+                ? copy.queue.missingNote
+                : extensionNeedsUpdate
+                  ? <>{copy.queue.updateNote} <a href={extensionDownloadUrl} download>{copy.queue.updateLink}</a></>
+                  : copy.queue.readyNote}
+            </div>
+
+            <div className="download-settings" aria-label={copy.queue.settingsTitle}>
+              <div className="download-settings-heading">{copy.queue.settingsTitle}</div>
+              <div className="download-settings-fields">
+                <label htmlFor="quality-preference">
+                  <span>{copy.queue.qualityLabel}</span>
+                  <select id="quality-preference" value={qualityPreference} onChange={(event) => setQualityPreference(event.target.value)}>
+                    {copy.queue.qualityOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                </label>
+                <label htmlFor="filename-pattern">
+                  <span>{copy.queue.filenameLabel}</span>
+                  <select id="filename-pattern" value={filenamePattern} onChange={(event) => setFilenamePattern(event.target.value)}>
+                    {copy.queue.filenameOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                </label>
+              </div>
+              <p>{copy.queue.settingsNote}</p>
             </div>
 
             <form className="queue-form" onSubmit={addQueueItems}>
@@ -224,21 +356,29 @@ export function App({ initialLanguage = "th" }) {
                 <h3>{copy.queue.items} <span className="queue-count">{queueItems.length}</span></h3>
                 <p>{copy.queue.summary(activeCount, finishedCount)}</p>
               </div>
-              {queueItems.length > 0 && (
-                <div className="queue-controls">
-                  {activeCount > 0 && (
-                    <button type="button" className="quiet-button" onClick={() => postToExtension(queuePaused ? "QUEUE_RESUME" : "QUEUE_PAUSE")}>
-                      {queuePaused ? copy.queue.resume : copy.queue.pause}
-                    </button>
-                  )}
-                  {finishedCount > 0 && (
-                    <button type="button" className="quiet-button" onClick={() => postToExtension("QUEUE_CLEAR_COMPLETED")}>
-                      {copy.queue.clear}
-                    </button>
-                  )}
-                </div>
-              )}
+              <div className="queue-controls">
+                <button type="button" className="quiet-button" onClick={() => importInputRef.current?.click()} disabled={!extensionAvailable || queueSubmitting}>
+                  {copy.queue.import}
+                </button>
+                {queueItems.length > 0 && (
+                  <button type="button" className="quiet-button" onClick={exportQueue}>
+                    {copy.queue.export}
+                  </button>
+                )}
+                {activeCount > 0 && (
+                  <button type="button" className="quiet-button" onClick={() => postToExtension(queuePaused ? "QUEUE_RESUME" : "QUEUE_PAUSE")}>
+                    {queuePaused ? copy.queue.resume : copy.queue.pause}
+                  </button>
+                )}
+                {finishedCount > 0 && (
+                  <button type="button" className="quiet-button" onClick={() => postToExtension("QUEUE_CLEAR_COMPLETED")}>
+                    {copy.queue.clear}
+                  </button>
+                )}
+              </div>
             </div>
+            <input ref={importInputRef} className="visually-hidden" type="file" accept=".json,.txt,application/json,text/plain" onChange={importQueueFile} />
+            <p className="queue-export-note">{copy.queue.exportNote}</p>
 
             {queuePaused && activeCount > 0 && <div className="paused-banner">{copy.queue.paused}</div>}
             {queueItems.length === 0 ? (
@@ -284,6 +424,7 @@ export function App({ initialLanguage = "th" }) {
             {copy.install.steps.map(([title, description], index) => (
               <li key={title}>
                 <span className="install-step-number">{String(index + 1).padStart(2, "0")}</span>
+                <GuideIcon name={["download", "browser", "folder"][index]} />
                 <div><strong>{title}</strong><p>{description}</p></div>
               </li>
             ))}
@@ -333,6 +474,27 @@ export function App({ initialLanguage = "th" }) {
               </details>
             ))}
           </div>
+        </section>
+
+        <section className="troubleshooting-section" aria-labelledby="troubleshooting-title">
+          <div className="section-heading">
+            <span className="eyebrow">{copy.troubleshooting.eyebrow}</span>
+            <h2 id="troubleshooting-title">{copy.troubleshooting.title}</h2>
+            <p>{copy.troubleshooting.description}</p>
+          </div>
+          <div className="troubleshooting-grid">
+            {copy.troubleshooting.steps.map(([title, description], index) => (
+              <article className="troubleshooting-card" key={title}>
+                <div className="troubleshooting-card-top">
+                  <GuideIcon name={["access", "refresh", "warning"][index]} />
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </article>
+            ))}
+          </div>
+          <p className="troubleshooting-note">{copy.troubleshooting.note}</p>
         </section>
 
         <AdSenseSlot placement="CONTENT" label={copy.adLabel} />

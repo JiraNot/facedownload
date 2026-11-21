@@ -20,4 +20,6 @@ The extension opens one Facebook post in a background tab, reads the loaded page
 
 The extension does not request the `cookies` permission, read or store browser cookies, collect credentials, or send page source or media URLs to an app server. The browser may attach matching cookies already available to its own request. Use the extension only for videos you are allowed to view and save.
 
+Version 1.3.0 supports selecting an available video quality and download filename pattern for newly queued links. If the web app reports that the extension is out of date, download the current ZIP and reload the extracted folder from the extensions page.
+
 Expired CDN links may return 403; the extension reopens the post once to get a fresh URL, then reports a failed item if Facebook still rejects it. Videos with separate audio and video streams are not merged.

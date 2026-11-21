@@ -45,6 +45,8 @@ export const COPY = {
       waiting: "รอส่วนขยาย",
       readyNote: "เชื่อมต่อส่วนขยายแล้ว ใช้ Facebook ในโปรไฟล์เบราว์เซอร์นี้",
       missingNote: "เปิดส่วนขยายใน Edge หรือ Chrome โปรไฟล์เดียวกับ Facebook แล้วรีเฟรชหน้านี้",
+      updateNote: "ส่วนขยายเวอร์ชันเก่า ตัวเลือกคุณภาพและชื่อไฟล์ต้องใช้เวอร์ชัน 1.3.0 ขึ้นไป",
+      updateLink: "ดาวน์โหลดแล้วโหลดส่วนขยายใหม่",
       inputLabel: "วางลิงก์วิดีโอ Facebook",
       placeholder: "วางหนึ่งลิงก์ต่อบรรทัด\nhttps://www.facebook.com/reel/...",
       inputHelp: "เพิ่มลิงก์ชุดใหม่ได้ระหว่างที่คิวกำลังทำงาน",
@@ -52,6 +54,19 @@ export const COPY = {
       adding: "กำลังเพิ่ม…",
       items: "รายการในคิว",
       summary: (active, finished) => `${active} รอหรือกำลังทำ · ${finished} จบแล้ว`,
+      settingsTitle: "ตัวเลือกดาวน์โหลด",
+      qualityLabel: "คุณภาพวิดีโอ",
+      qualityOptions: [["auto", "ดีที่สุดที่พบ (อัตโนมัติ)"], ["1080", "1080p (HD)"], ["720", "720p (HD)"], ["360", "360p (SD)"]],
+      filenameLabel: "รูปแบบชื่อไฟล์",
+      filenameOptions: [["title", "ชื่อโพสต์"], ["date-title", "วันที่_ชื่อโพสต์"], ["title-id", "ชื่อโพสต์_ID"]],
+      settingsNote: "ตัวเลือกนี้ใช้กับลิงก์ที่เพิ่มเข้าคิวหลังจากเลือก",
+      import: "นำเข้าคิว",
+      export: "ส่งออกคิว",
+      exportNote: "ไฟล์ JSON เก็บลิงก์และตัวเลือกคุณภาพ/ชื่อไฟล์ของรายการที่ยังไม่เสร็จ รายการที่เสร็จแล้วจะไม่ถูกนำกลับมาดาวน์โหลดซ้ำ",
+      emptyInput: "วางลิงก์ Facebook อย่างน้อยหนึ่งรายการก่อนเพิ่มเข้าคิว",
+      invalidInput: "ไม่พบลิงก์ Facebook ที่ถูกต้องในรายการ",
+      importInvalid: "อ่านไฟล์ไม่ได้ ใช้ไฟล์ JSON ที่ส่งออกจากเว็บนี้ หรือไฟล์ TXT ที่มีหนึ่งลิงก์ต่อบรรทัด",
+      exportEmpty: "ไม่มีรายการที่ยังไม่เสร็จให้ส่งออก",
       resume: "ทำงานต่อ",
       pause: "พักคิว",
       clear: "ล้างรายการจบแล้ว",
@@ -100,11 +115,24 @@ export const COPY = {
       items: [
         ["ต้องล็อกอิน Facebook ก่อนใช้งานไหม?", "ต้องล็อกอินในเบราว์เซอร์โปรไฟล์เดียวกับที่เปิด Facebook Video Loader และติดตั้งส่วนขยายไว้ เว็บแอปไม่มีช่องกรอกรหัสผ่าน Facebook"],
         ["วางหลายลิงก์แล้วระบบทำพร้อมกันหรือไม่?", "ระบบทำทีละรายการ เปิดโพสต์หนึ่งรายการ ค้นหาวิดีโอ แล้วรอให้ดาวน์โหลดเสร็จก่อนเริ่มโพสต์ถัดไป คุณเพิ่มลิงก์ใหม่เข้าคิวระหว่างทำงานได้"],
+        ["คิวจะหายไหมถ้าปิดเบราว์เซอร์?", "คิวอยู่ใน session ของส่วนขยายและจะถูกล้างเมื่อปิดเบราว์เซอร์ กดส่งออกคิวเพื่อบันทึกลิงก์และตัวเลือกของรายการที่ยังไม่เสร็จเป็นไฟล์ JSON แล้วนำเข้ากลับมาใช้ภายหลังได้"],
+        ["เลือกคุณภาพและชื่อไฟล์ได้ไหม?", "เลือกอัตโนมัติหรือ 1080p, 720p และ 360p รวมถึงรูปแบบชื่อไฟล์ได้ก่อนเพิ่มลิงก์ คุณภาพที่เลือกอาจไม่มีในบางโพสต์ ระบบจะใช้คุณภาพที่พบแทน"],
         ["ดาวน์โหลดวิดีโอในกลุ่มส่วนตัวได้หรือไม่?", "ระบบค้นหาได้เมื่อบัญชีที่ล็อกอินอยู่มีสิทธิ์เปิดโพสต์นั้น แต่รูปแบบโพสต์และสิทธิ์ของ Facebook อาจทำให้บางวิดีโอไม่สามารถค้นหาหรือดาวน์โหลดได้ ใช้กับวิดีโอที่คุณมีสิทธิ์บันทึกเท่านั้น"],
         ["ถ้าขึ้น Facebook CDN 403 ต้องทำอย่างไร?", "ลิงก์วิดีโออาจหมดอายุ ระบบจะเปิดโพสต์อีกครั้งเพื่อหาลิงก์ใหม่หนึ่งครั้ง หากยังถูกปฏิเสธ ให้ตรวจว่าโพสต์ยังเปิดได้ในโปรไฟล์นี้ แล้วกดลองใหม่จากรายการที่ล้มเหลว"],
         ["ไฟล์ที่ดาวน์โหลดอยู่ที่ไหน และเก็บข้อมูลอะไรไว้บ้าง?", "ไฟล์ใช้โฟลเดอร์ดาวน์โหลดของเบราว์เซอร์ ส่วนคิวและสถานะอยู่ใน session ของส่วนขยายและถูกล้างเมื่อปิดเบราว์เซอร์ เว็บแอปไม่ขอสิทธิ์ cookies และไม่เก็บรหัสผ่าน Facebook"],
         ["ทำไมบางวิดีโอถึงดาวน์โหลดไม่ได้?", "โพสต์อาจต้องใช้สิทธิ์เพิ่มเติม ลิงก์ CDN อาจถูกยกเลิก หรือวิดีโออาจแยกสตรีมภาพกับเสียง ซึ่งตัวดาวน์โหลดรุ่นนี้ยังไม่รวมเป็นไฟล์เดียว"],
       ],
+    },
+    troubleshooting: {
+      eyebrow: "คู่มือแก้ปัญหา",
+      title: "แก้ปัญหา Facebook CDN 403",
+      description: "ข้อผิดพลาดนี้มักเกิดเมื่อลิงก์วิดีโอหมดอายุหรือโพสต์ต้องใช้สิทธิ์จากโปรไฟล์ที่ล็อกอินอยู่",
+      steps: [
+        ["ตรวจว่าเปิดโพสต์ได้", "เปิดโพสต์ใน Edge หรือ Chrome โปรไฟล์เดียวกับส่วนขยาย และลองเล่นวิดีโอให้เริ่มก่อน"],
+        ["ลองดึงลิงก์ใหม่", "ระบบจะเปิดโพสต์อีกครั้งให้อัตโนมัติหนึ่งครั้ง ถ้ารายการยังไม่สำเร็จ ให้กด ลองใหม่ ในคิว"],
+        ["ตรวจสิทธิ์และรูปแบบวิดีโอ", "ถ้ายังขึ้น 403 ให้ยืนยันว่าบัญชีนี้มีสิทธิ์ดูโพสต์ วิดีโอที่แยกภาพกับเสียงยังดาวน์โหลดเป็นไฟล์เดียวไม่ได้"],
+      ],
+      note: "การส่งออกคิวเก็บเฉพาะ URL โพสต์ Facebook ไว้ในไฟล์บนเครื่อง โปรดเก็บไฟล์นั้นในที่ปลอดภัยและอย่าแชร์ลิงก์ส่วนตัว",
     },
     recommendation: {
       eyebrow: "คำแนะนำ",
@@ -151,6 +179,8 @@ export const COPY = {
       waiting: "Waiting for extension",
       readyNote: "Extension connected. Facebook is available in this browser profile.",
       missingNote: "Enable the extension in the Edge or Chrome profile you use for Facebook, then refresh this page.",
+      updateNote: "This extension is out of date. Quality and file-name options require version 1.3.0 or later.",
+      updateLink: "Download and reload the extension",
       inputLabel: "Paste Facebook video links",
       placeholder: "One link per line\nhttps://www.facebook.com/reel/...",
       inputHelp: "Add more links while the queue is running",
@@ -158,6 +188,19 @@ export const COPY = {
       adding: "Adding…",
       items: "Queue items",
       summary: (active, finished) => `${active} queued or active · ${finished} finished`,
+      settingsTitle: "Download options",
+      qualityLabel: "Video quality",
+      qualityOptions: [["auto", "Best available (auto)"], ["1080", "1080p (HD)"], ["720", "720p (HD)"], ["360", "360p (SD)"]],
+      filenameLabel: "File name format",
+      filenameOptions: [["title", "Post title"], ["date-title", "Date_title"], ["title-id", "Title_ID"]],
+      settingsNote: "These options apply to links added after you select them.",
+      import: "Import queue",
+      export: "Export queue",
+      exportNote: "Saves unfinished links and their quality/file-name options in JSON. Completed items are excluded to avoid downloading them again.",
+      emptyInput: "Paste at least one Facebook link before adding to the queue.",
+      invalidInput: "No valid Facebook links were found.",
+      importInvalid: "Could not read the file. Choose a queue JSON exported from this site or a TXT file with one link per line.",
+      exportEmpty: "There are no unfinished items to export.",
       resume: "Resume queue",
       pause: "Pause queue",
       clear: "Clear finished items",
@@ -206,11 +249,24 @@ export const COPY = {
       items: [
         ["Do I need to sign in to Facebook first?", "Yes. Sign in to the same browser profile where Facebook Video Loader and its extension are open. The web app never asks for your Facebook password."],
         ["Will multiple links download at the same time?", "No. The extension opens one post, finds its video, and waits for the download to finish before starting the next one. You can add more links while the queue runs."],
+        ["Will my queue disappear if I close the browser?", "The queue is stored in the extension's session and clears when the browser closes. Export it to save unfinished links and their options as JSON, then import them later."],
+        ["Can I choose video quality and file names?", "Choose auto, 1080p, 720p, or 360p and a file-name format before adding links. A post may not provide the selected quality, so the best available option is used instead."],
         ["Can I download videos from private groups?", "The extension can look for a video when your signed-in account can open the post. Facebook permissions and post formats may still prevent some downloads. Only save videos you are allowed to keep."],
         ["What should I do if Facebook CDN returns 403?", "A video link may have expired. The extension reopens the post once to find a fresh link. If Facebook still rejects it, confirm you can open the post in this profile and retry the failed item."],
         ["Where are files saved, and what data is stored?", "Files go to your browser's download folder. Queue state stays in the extension's session storage and clears when the browser closes. The app does not request cookie access or store your Facebook password."],
         ["Why can't some videos be downloaded?", "A post may need additional access, a CDN link may expire, or the video may use separate audio and video streams that this version cannot combine into one file."],
       ],
+    },
+    troubleshooting: {
+      eyebrow: "TROUBLESHOOTING",
+      title: "Fix Facebook CDN 403 errors",
+      description: "This usually means the video link expired or the post needs access from the signed-in browser profile.",
+      steps: [
+        ["Make sure the post opens", "Open the post in the same Edge or Chrome profile as the extension, then start playing the video."],
+        ["Fetch a fresh link", "The extension reopens the post once automatically. If the item still fails, choose Retry in the queue."],
+        ["Check access and video format", "If 403 continues, confirm this account can view the post. Videos with separate audio and video streams cannot be saved as one file yet."],
+      ],
+      note: "Queue export stores Facebook post URLs in a local file. Keep it private and do not share links to private posts.",
     },
     recommendation: {
       eyebrow: "TIP",
@@ -235,7 +291,7 @@ export const COPY = {
 const EXTENSION_TEXT_EN = {
   "ลิงก์ CDN หมดอายุ (403) กำลังเปิดโพสต์เพื่อหาลิงก์ใหม่": "The CDN link expired (403). Reopening the post to find a fresh link.",
   "เสร็จแล้ว": "Completed",
-  "Facebook CDN ปฏิเสธลิงก์ (403) — คัดลอกซอร์สใหม่ขณะล็อกอิน": "Facebook CDN rejected the link (403). Reopen the post while signed in and try again.",
+  "Facebook CDN ปฏิเสธลิงก์หลังลองใหม่ (403) — ตรวจสิทธิ์โพสต์แล้วลองอีกครั้ง": "Facebook CDN rejected the fresh link (403). Check post access and try again.",
   "ยกเลิกการดาวน์โหลด": "Download canceled",
   "ดาวน์โหลดไม่สำเร็จ — ตรวจลิงก์หรือการเข้าสู่ระบบ": "Download failed. Check the link and your Facebook sign-in.",
   "กำลังเปิดหน้า Facebook": "Opening Facebook post",
@@ -263,14 +319,32 @@ const EXTENSION_TEXT_EN = {
   "กำลังเพิ่มรายการเข้าคิว…": "Adding links to the queue…",
   "ส่วนขยายไม่ตอบกลับ ลองรีเฟรชเว็บแอปหลังเปิดส่วนขยาย": "The extension did not respond. Refresh this page after enabling it.",
   "อัปเดตคิวแล้ว": "Queue updated.",
+  "อ่านไฟล์ไม่ได้ ใช้ไฟล์ JSON ที่ส่งออกจากเว็บนี้ หรือไฟล์ TXT ที่มีหนึ่งลิงก์ต่อบรรทัด": "Could not read the file. Choose a queue JSON exported from this site or a TXT file with one link per line.",
+  "ไม่มีรายการที่ยังไม่เสร็จให้ส่งออก": "There are no unfinished items to export.",
+};
+
+const FEEDBACK_TH_FROM_EN = {
+  "Paste at least one Facebook link before adding to the queue.": "วางลิงก์ Facebook อย่างน้อยหนึ่งรายการก่อนเพิ่มเข้าคิว",
+  "No valid Facebook links were found.": "ไม่พบลิงก์ Facebook ที่ถูกต้องในรายการ",
+  "Could not read the file. Choose a queue JSON exported from this site or a TXT file with one link per line.": "อ่านไฟล์ไม่ได้ ใช้ไฟล์ JSON ที่ส่งออกจากเว็บนี้ หรือไฟล์ TXT ที่มีหนึ่งลิงก์ต่อบรรทัด",
+  "There are no unfinished items to export.": "ไม่มีรายการที่ยังไม่เสร็จให้ส่งออก",
+  "Queue updated.": "อัปเดตคิวแล้ว",
+  "Queue paused.": "พักคิวแล้ว",
+  "Queue resumed.": "ทำคิวต่อแล้ว",
+  "Cleared finished items from the queue.": "ล้างรายการที่จบแล้วออกจากคิว",
+  "Item removed from the queue.": "นำรายการออกจากคิวแล้ว",
 };
 
 function translateExtensionText(text) {
   if (!text) return "";
+  if (!/[ก-๙]/.test(text)) return text;
   if (EXTENSION_TEXT_EN[text]) return EXTENSION_TEXT_EN[text];
 
   const downloadMatch = text.match(/^กำลังดาวน์โหลด\s+(.+)$/);
   if (downloadMatch) return `Downloading ${downloadMatch[1]}`;
+
+  const qualityFallbackMatch = text.match(/^ไม่พบ\s+(\d+)p\s+ใช้\s+(.+)\s+แทน$/);
+  if (qualityFallbackMatch) return `${qualityFallbackMatch[1]}p was unavailable; using ${qualityFallbackMatch[2]} instead.`;
 
   const capacityMatch = text.match(/^คิวรองรับรายการที่ยังไม่เสร็จได้สูงสุด\s+(\d+)\s+รายการ$/);
   if (capacityMatch) return `The queue can hold up to ${capacityMatch[1]} unfinished items.`;
@@ -293,12 +367,30 @@ function translateExtensionText(text) {
     return `Skipped ${count} non-Facebook link${count === 1 ? "" : "s"}`;
   }
 
+  const exportedMatch = text.match(/^ส่งออกลิงก์คิว\s+(\d+)\s+รายการแล้ว$/);
+  if (exportedMatch) {
+    const count = Number(exportedMatch[1]);
+    return `Exported ${count} queue link${count === 1 ? "" : "s"}.`;
+  }
+
   return null;
 }
 
 export function localizeFeedback(text, language) {
-  if (language === "th" || !text) return text;
-  return text.split(" • ").map((part) => translateExtensionText(part) || "The extension could not complete this action.").join(" · ");
+  if (!text) return text;
+  return text.split(" • ").map((part) => {
+    if (language === "en") return translateExtensionText(part) || "The extension could not complete this action.";
+    if (FEEDBACK_TH_FROM_EN[part]) return FEEDBACK_TH_FROM_EN[part];
+
+    const addedMatch = part.match(/^Added (\d+) items? to the queue$/);
+    if (addedMatch) return `เพิ่ม ${addedMatch[1]} รายการเข้าคิวแล้ว`;
+    const duplicateMatch = part.match(/^Skipped (\d+) duplicate links?$/);
+    if (duplicateMatch) return `ข้ามลิงก์ซ้ำ ${duplicateMatch[1]} รายการ`;
+    const invalidMatch = part.match(/^Skipped (\d+) non-Facebook links?$/);
+    if (invalidMatch) return `ข้ามลิงก์ที่ไม่ใช่ Facebook ${invalidMatch[1]} รายการ`;
+
+    return part;
+  }).join(language === "en" ? " · " : " • ");
 }
 
 export function localizeQueueDetail(detail, status, language) {

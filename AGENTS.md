@@ -11,6 +11,8 @@
 - The visible Thai introduction and FAQ are SEO content and must be present in the pre-rendered HTML.
 - AdSense is opt-in: render no ad slot and load no Google script unless the client and corresponding numeric slot ID are configured. Never invent publisher or slot IDs.
 - Keep the queue in extension session storage. Validate Facebook post and CDN hosts before opening or downloading URLs.
+- Queue export must include only Facebook post links that are not completed; import must pass links through the existing Facebook URL validation. Keep export local and explain that the file contains potentially private post URLs.
+- Download quality and filename preferences apply to newly added queue items and must be restricted to supported values in the extension. When changing extension features used by the page, report the extension version so the page can prompt users to update.
 - Pause takes effect after the currently processing/downloading item finishes. Failed items can be retried or removed; active items cannot be removed.
 
 ## Architecture
@@ -27,6 +29,6 @@
 
 ## Verification
 
-- Before handing off implementation changes, run the relevant production build (`npm run build:vercel` for Vercel or `npm run build:pages` for Pages). Check the pre-rendered `dist/client/index.html` for the visible intro/FAQ text and correct canonical URL.
+- Before handing off implementation changes, run the relevant production build (`npm run build:vercel` for Vercel or `npm run build:pages` for Pages). Check both pre-rendered language pages under `dist/client/` for localized intro/FAQ text, canonical URLs, and alternate-language metadata.
 - For a release, inspect the hosting deployment result and open the published URL. Do not use real Facebook account data for parser fixtures.
 - Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs`, and `tests/sites-worker.test.mjs` intact so the prototype remains compatible with Sites handoff.

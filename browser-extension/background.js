@@ -2,6 +2,8 @@
 const QUEUE_KEY = "fgetQueue";
 const QUEUE_PAUSED_KEY = "facebookVideoLoaderQueuePaused";
 const MAX_QUEUE_SIZE = 50;
+const QUALITY_PREFERENCES = new Set(["auto", "1080", "720", "360"]);
+const FILENAME_PATTERNS = new Set(["title", "date-title", "title-id"]);
 let queueRunner = null;
 
 function delay(ms) {
@@ -156,7 +158,7 @@ async function finishDownload(downloadId, state, errorCode = "") {
   const detail = state === "complete"
     ? "เสร็จแล้ว"
     : errorCode === "SERVER_FORBIDDEN"
-      ? "Facebook CDN ปฏิเสธลิงก์ (403) — คัดลอกซอร์สใหม่ขณะล็อกอิน"
+      ? "Facebook CDN ปฏิเสธลิงก์หลังลองใหม่ (403) — ตรวจสิทธิ์โพสต์แล้วลองอีกครั้ง"
       : errorCode === "USER_CANCELED"
         ? "ยกเลิกการดาวน์โหลด"
         : "ดาวน์โหลดไม่สำเร็จ — ตรวจลิงก์หรือการเข้าสู่ระบบ";
@@ -173,6 +175,30 @@ chrome.downloads.onChanged.addListener((delta) => {
   if (delta.state?.current === "interrupted") void finishDownload(delta.id, "interrupted", delta.error?.current || "");
 });
 
+function chooseMedia(results, preference) {
+  const available = results.filter((result) => result.videoUrl && (!result.audioUrl || result.audioUrl === result.videoUrl));
+  if (!available.length) return { media: null, preferenceUnavailable: false };
+  if (!preference || preference === "auto") return { media: available[0], preferenceUnavailable: false };
+
+  const wanted = available.find((result) => new RegExp(`(?:^|\\D)${preference}p`, "i").test(result.quality));
+  return wanted
+    ? { media: wanted, preferenceUnavailable: false }
+    : { media: available[0], preferenceUnavailable: true };
+}
+
+function buildDownloadBaseName(title, item) {
+  const safeTitle = safeFilename(title, `facebook-video-${item.id.slice(0, 8)}`);
+  if (item.filenamePattern === "date-title") {
+    const today = new Date();
+    const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return safeFilename(`${localDate}_${safeTitle}`, safeTitle);
+  }
+  if (item.filenamePattern === "title-id") {
+    return safeFilename(`${safeTitle}_${item.id.slice(0, 8)}`, safeTitle);
+  }
+  return safeTitle;
+}
+
 async function processOne(item) {
   let tabId;
   try {
@@ -184,7 +210,8 @@ async function processOne(item) {
     await setQueueItem(item.id, { status: "searching", detail: "กำลังค้นหาลิงก์วิดีโอ" });
 
     const page = await extractVideoFromTab(tabId);
-    const media = page.results.find((result) => result.videoUrl && (!result.audioUrl || result.audioUrl === result.videoUrl));
+    const preference = QUALITY_PREFERENCES.has(item.qualityPreference) ? item.qualityPreference : "auto";
+    const { media, preferenceUnavailable } = chooseMedia(page.results, preference);
     if (!media) {
       if (page.results.some((result) => result.audioUrl && result.audioUrl !== result.videoUrl)) {
         throw new Error("วิดีโอแยกภาพกับเสียง เว็บแอปยังรวมสตรีมไม่ได้");
@@ -193,18 +220,21 @@ async function processOne(item) {
     }
 
     const title = safeFilename(page.title, `facebook-video-${item.id.slice(0, 8)}`);
+    const filename = buildDownloadBaseName(title, item);
     await chrome.tabs.remove(tabId).catch(() => {});
     tabId = undefined;
 
     const downloadId = await chrome.downloads.download({
       url: media.videoUrl,
-      filename: `Facebook Video Loader/${title}.mp4`,
+      filename: `Facebook Video Loader/${filename}.mp4`,
       conflictAction: "uniquify",
       saveAs: false,
     });
     await setQueueItem(item.id, {
       status: "downloading",
-      detail: `กำลังดาวน์โหลด ${media.quality}`,
+      detail: preferenceUnavailable
+        ? `ไม่พบ ${preference}p ใช้ ${media.quality} แทน`
+        : `กำลังดาวน์โหลด ${media.quality}`,
       title: page.title || title,
       quality: media.quality,
       downloadId,
@@ -263,25 +293,41 @@ function startQueueRunner() {
   return queueRunner;
 }
 
-async function addToQueue(urlValues) {
-  const normalized = [...new Set((Array.isArray(urlValues) ? urlValues : []).map(normalizeFacebookUrl).filter(Boolean))];
+async function addToQueue(urlValues, options = {}) {
+  const qualityPreference = QUALITY_PREFERENCES.has(options.qualityPreference) ? options.qualityPreference : "auto";
+  const filenamePattern = FILENAME_PATTERNS.has(options.filenamePattern) ? options.filenamePattern : "title";
+  const seenUrls = new Set();
+  const normalized = [];
+  for (const entry of Array.isArray(urlValues) ? urlValues : []) {
+    const isObject = entry && typeof entry === "object";
+    const url = normalizeFacebookUrl(isObject ? entry.url : entry);
+    if (!url || seenUrls.has(url)) continue;
+    seenUrls.add(url);
+    normalized.push({
+      url,
+      qualityPreference: QUALITY_PREFERENCES.has(entry?.qualityPreference) ? entry.qualityPreference : qualityPreference,
+      filenamePattern: FILENAME_PATTERNS.has(entry?.filenamePattern) ? entry.filenamePattern : filenamePattern,
+    });
+  }
   if (!normalized.length) throw new Error("ไม่พบ URL Facebook ที่ถูกต้อง");
 
   const queue = await readQueue();
   const activeUrls = new Set(queue
     .filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status))
     .map((item) => item.url));
-  const newUrls = normalized.filter((url) => !activeUrls.has(url));
+  const newUrls = normalized.filter((entry) => !activeUrls.has(entry.url));
   if (queue.filter((item) => ["queued", "opening", "searching", "downloading"].includes(item.status)).length + newUrls.length > MAX_QUEUE_SIZE) {
     throw new Error(`คิวรองรับรายการที่ยังไม่เสร็จได้สูงสุด ${MAX_QUEUE_SIZE} รายการ`);
   }
 
-  const added = newUrls.map((url) => ({
+  const added = newUrls.map((entry) => ({
     id: crypto.randomUUID(),
-    url,
+    url: entry.url,
     status: "queued",
     title: "",
     detail: "รอคิว",
+    qualityPreference: entry.qualityPreference,
+    filenamePattern: entry.filenamePattern,
     downloadId: null,
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -299,7 +345,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!isAppSender(sender)) return;
 
   if (message?.type === "PING") {
-    sendResponse({ available: true });
+    sendResponse({ available: true, version: chrome.runtime.getManifest().version });
     return;
   }
 
@@ -318,7 +364,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "QUEUE_ADD") {
     (async () => {
       try {
-        const result = await addToQueue(message.urls);
+        const result = await addToQueue(message.urls, {
+          qualityPreference: message.qualityPreference,
+          filenamePattern: message.filenamePattern,
+        });
         sendResponse({ available: true, paused: await readPaused(), invalidCount: Number(message.invalidCount) || 0, ...result });
       } catch (error) {
         sendResponse({ available: true, paused: await readPaused(), error: String(error?.message || "เพิ่มคิวไม่สำเร็จ"), queue: await readQueue() });
