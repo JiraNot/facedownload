@@ -21,10 +21,11 @@ const STATUS = {
 
 export const COPY = {
   th: {
-    pageTitle: "โหลดวิดีโอ Facebook เป็นคิว | Facebook Video Loader",
-    pageDescription: "Facebook Video Loader ช่วยจัดคิวลิงก์วิดีโอ Facebook เปิดค้นหาและดาวน์โหลดทีละรายการใน Edge หรือ Chrome โปรไฟล์ที่ล็อกอินไว้",
-    ogTitle: "Facebook Video Loader — โหลดวิดีโอ Facebook เป็นคิว",
-    ogDescription: "วางลิงก์ Facebook หลายรายการ แล้วดาวน์โหลดทีละรายการในเบราว์เซอร์ที่ล็อกอินอยู่",
+    pageTitle: "ดาวน์โหลดวิดีโอ Facebook เป็นชุด | Facebook Video Loader",
+    pageDescription: "วางลิงก์วิดีโอ Facebook และ Reels หลายรายการ แล้วจัดคิวดาวน์โหลดทีละรายการผ่าน Edge หรือ Chrome ใช้ส่วนขยายและบัญชีที่มีสิทธิ์ดูโพสต์ ไม่ขอรหัสผ่าน",
+    schemaBrowserRequirements: "ต้องใช้ Microsoft Edge หรือ Google Chrome พร้อมติดตั้งส่วนขยาย Facebook Video Loader",
+    ogTitle: "ดาวน์โหลดวิดีโอ Facebook เป็นชุด — Facebook Video Loader",
+    ogDescription: "จัดคิววิดีโอ Facebook และ Reels หลายลิงก์ แล้วดาวน์โหลดทีละรายการใน Edge หรือ Chrome โปรไฟล์ที่ล็อกอินอยู่",
     languageLabel: "เลือกภาษา",
     mainMenu: "เมนูหลัก",
     languageThai: "ภาษาไทย",
@@ -34,9 +35,9 @@ export const COPY = {
     navDownload: "ดาวน์โหลดส่วนขยาย",
     hero: {
       eyebrow: "FACEBOOK VIDEO LOADER",
-      title: "โหลดวิดีโอ Facebook",
-      accent: "เป็นคิว จบทีละรายการ",
-      description: "ตัวช่วยจัดคิววิดีโอ Facebook ในเบราว์เซอร์ของคุณ วางลิงก์ได้ต่อเนื่อง แล้วให้ระบบเปิดโพสต์ ค้นหาวิดีโอ และดาวน์โหลดตามลำดับ",
+      title: "ดาวน์โหลดวิดีโอ Facebook",
+      accent: "เป็นคิว ทีละรายการ",
+      description: "วางลิงก์วิดีโอ Facebook และ Reels ได้ต่อเนื่อง แล้วให้ส่วนขยายเปิดโพสต์ ค้นหา และดาวน์โหลดทีละรายการใน Edge หรือ Chrome โปรไฟล์ที่ล็อกอินอยู่",
       points: ["ใช้โปรไฟล์ Facebook เดิม", "ประมวลผลครั้งละหนึ่งรายการ", "คิวอยู่ในเบราว์เซอร์"],
       pointsLabel: "จุดเด่น",
     },
@@ -97,7 +98,7 @@ export const COPY = {
     how: {
       eyebrow: "วิธีทำงาน",
       title: "จากลิงก์ไปถึงไฟล์ดาวน์โหลด",
-      description: "เว็บแอปส่งงานให้ส่วนขยายทำในเบราว์เซอร์ที่คุณใช้ Facebook อยู่",
+      description: "จัดคิวดาวน์โหลดวิดีโอ Facebook และ Reels ลงคอมทีละรายการ ผ่านส่วนขยายในเบราว์เซอร์ที่คุณใช้ Facebook อยู่",
       steps: [
         ["วางลิงก์โพสต์", "ใส่ URL วิดีโอ Facebook หนึ่งลิงก์ต่อหนึ่งบรรทัด แล้วเพิ่มเข้าคิวได้เรื่อย ๆ"],
         ["เปิดและค้นหาอัตโนมัติ", "ส่วนขยายเปิดโพสต์ในแท็บเบื้องหลัง ใช้สิทธิ์เข้าถึงจากโปรไฟล์ที่ล็อกอินอยู่"],
@@ -121,6 +122,7 @@ export const COPY = {
         ["วางหลายลิงก์แล้วระบบทำพร้อมกันหรือไม่?", "ระบบทำทีละรายการ เปิดโพสต์หนึ่งรายการ ค้นหาวิดีโอ แล้วรอให้ดาวน์โหลดเสร็จก่อนเริ่มโพสต์ถัดไป คุณเพิ่มลิงก์ใหม่เข้าคิวระหว่างทำงานได้"],
         ["คิวจะหายไหมถ้าปิดเบราว์เซอร์?", "คิวอยู่ใน session ของส่วนขยายและจะถูกล้างเมื่อปิดเบราว์เซอร์ กดส่งออกคิวเพื่อบันทึกลิงก์และตัวเลือกของรายการที่ยังไม่เสร็จเป็นไฟล์ JSON แล้วนำเข้ากลับมาใช้ภายหลังได้"],
         ["เลือกคุณภาพและชื่อไฟล์ได้ไหม?", "เลือกอัตโนมัติหรือ 1080p, 720p และ 360p ได้ ส่วนชื่อไฟล์ให้ใส่ในช่องชื่อไฟล์ โดยวางชื่อไว้บรรทัดเดียวกับลิงก์ที่ต้องการ หากเว้นว่าง ระบบใช้รูปแบบชื่อไฟล์ที่เลือกไว้"],
+        ["ดาวน์โหลด Facebook Reels ได้ไหม?", "ได้เมื่อบัญชีที่ล็อกอินอยู่เปิดและเล่น Reel นั้นได้ วางลิงก์ Reel ในคิวเหมือนลิงก์โพสต์ทั่วไป แล้วส่วนขยายจะค้นหาและดาวน์โหลดทีละรายการ รูปแบบโพสต์บางแบบอาจไม่รองรับ"],
         ["ดาวน์โหลดวิดีโอในกลุ่มส่วนตัวได้หรือไม่?", "ระบบค้นหาได้เมื่อบัญชีที่ล็อกอินอยู่มีสิทธิ์เปิดโพสต์นั้น แต่รูปแบบโพสต์และสิทธิ์ของ Facebook อาจทำให้บางวิดีโอไม่สามารถค้นหาหรือดาวน์โหลดได้ ใช้กับวิดีโอที่คุณมีสิทธิ์บันทึกเท่านั้น"],
         ["ถ้าขึ้น Facebook CDN 403 ต้องทำอย่างไร?", "ลิงก์วิดีโออาจหมดอายุ ระบบจะเปิดโพสต์อีกครั้งเพื่อหาลิงก์ใหม่หนึ่งครั้ง หากยังถูกปฏิเสธ ให้ตรวจว่าโพสต์ยังเปิดได้ในโปรไฟล์นี้ แล้วกดลองใหม่จากรายการที่ล้มเหลว"],
         ["ไฟล์ที่ดาวน์โหลดอยู่ที่ไหน และเก็บข้อมูลอะไรไว้บ้าง?", "ไฟล์ใช้โฟลเดอร์ดาวน์โหลดของเบราว์เซอร์ ส่วนคิวและสถานะอยู่ใน session ของส่วนขยายและถูกล้างเมื่อปิดเบราว์เซอร์ เว็บแอปไม่ขอสิทธิ์ cookies และไม่เก็บรหัสผ่าน Facebook"],
@@ -157,10 +159,11 @@ export const COPY = {
     },
   },
   en: {
-    pageTitle: "Queue Facebook Video Downloads | Facebook Video Loader",
-    pageDescription: "Queue Facebook video links and download them one at a time in the Edge or Chrome profile where you are signed in.",
-    ogTitle: "Facebook Video Loader — Queue Facebook video downloads",
-    ogDescription: "Add multiple Facebook links and download them sequentially in your signed-in browser.",
+    pageTitle: "Download Facebook videos in a queue | Facebook Video Loader",
+    pageDescription: "Queue Facebook video and Reel links in Edge or Chrome, find posts using your signed-in profile, and download one at a time. Requires our browser extension.",
+    schemaBrowserRequirements: "Requires Microsoft Edge or Google Chrome with the Facebook Video Loader extension installed.",
+    ogTitle: "Download Facebook videos in a queue — Facebook Video Loader",
+    ogDescription: "Queue Facebook videos and Reels, then download one at a time in your signed-in Edge or Chrome profile.",
     languageLabel: "Language",
     mainMenu: "Main menu",
     languageThai: "Thai",
@@ -170,9 +173,9 @@ export const COPY = {
     navDownload: "Download extension",
     hero: {
       eyebrow: "FACEBOOK VIDEO LOADER",
-      title: "Download Facebook",
-      accent: "videos one at a time",
-      description: "Keep a queue of Facebook video links in your browser. Add links as you go, then let the extension open each post, find the video, and download it in order.",
+      title: "Download Facebook videos",
+      accent: "in a queue",
+      description: "Queue Facebook video and Reel links, then use the extension to find posts and download one at a time in the Edge or Chrome profile where you are signed in.",
       points: ["Use your signed-in Facebook profile", "Process one video at a time", "Queue stays in your browser"],
       pointsLabel: "Highlights",
     },
@@ -233,7 +236,7 @@ export const COPY = {
     how: {
       eyebrow: "HOW IT WORKS",
       title: "From link to downloaded file",
-      description: "The web app hands each task to the extension in the browser where you use Facebook.",
+      description: "Queue Facebook video and Reel downloads to your computer one at a time with the extension in the browser where you use Facebook.",
       steps: [
         ["Add post links", "Paste Facebook video URLs, one per line, and add more links whenever you like."],
         ["Open and find videos", "The extension opens each post in a background tab using the access of your signed-in profile."],
@@ -257,6 +260,7 @@ export const COPY = {
         ["Will multiple links download at the same time?", "No. The extension opens one post, finds its video, and waits for the download to finish before starting the next one. You can add more links while the queue runs."],
         ["Will my queue disappear if I close the browser?", "The queue is stored in the extension's session and clears when the browser closes. Export it to save unfinished links and their options as JSON, then import them later."],
         ["Can I choose video quality and file names?", "Choose auto, 1080p, 720p, or 360p. Enter each file name in the separate name field on the same line as its link. Leave it blank to use your selected file-name format."],
+        ["Can I download Facebook Reels?", "Yes, when your signed-in account can open and play the Reel. Add its link to the queue like any other Facebook post. Some post formats may not be supported."],
         ["Can I download videos from private groups?", "The extension can look for a video when your signed-in account can open the post. Facebook permissions and post formats may still prevent some downloads. Only save videos you are allowed to keep."],
         ["What should I do if Facebook CDN returns 403?", "A video link may have expired. The extension reopens the post once to find a fresh link. If Facebook still rejects it, confirm you can open the post in this profile and retry the failed item."],
         ["Where are files saved, and what data is stored?", "Files go to your browser's download folder. Queue state stays in the extension's session storage and clears when the browser closes. The app does not request cookie access or store your Facebook password."],

@@ -57,6 +57,9 @@ function renderPage(language, canonicalUrl) {
     .replaceAll("__OG_DESCRIPTION__", escapeHtml(copy.ogDescription))
     .replaceAll("__OG_LOCALE__", language === "th" ? "th_TH" : "en_US")
     .replaceAll("__JSON_DESCRIPTION__", JSON.stringify(copy.pageDescription))
+    .replaceAll("__BROWSER_REQUIREMENTS__", JSON.stringify(copy.schemaBrowserRequirements))
+    .replaceAll("__SCHEMA_LANGUAGE__", language === "th" ? "th-TH" : "en-US")
+    .replaceAll("__SITE_ROOT_URL__", escapeHtml(siteUrl))
     .replace("__ALTERNATE_LANGUAGES__", alternatives)
     .replace("<!--adsense-script-->", adsenseScript);
 }

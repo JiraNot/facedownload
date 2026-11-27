@@ -22,13 +22,27 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Facebook Video Loader",
-        "url": "__SITE_URL__",
-        "description": __JSON_DESCRIPTION__,
-        "applicationCategory": "MultimediaApplication",
-        "operatingSystem": "Windows, macOS, Linux",
-        "browserRequirements": "ต้องใช้ Edge หรือ Chrome พร้อมส่วนขยาย Facebook Video Loader"
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "__SITE_ROOT_URL__#website",
+            "url": "__SITE_ROOT_URL__",
+            "name": "Facebook Video Loader",
+            "inLanguage": "__SCHEMA_LANGUAGE__"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "__SITE_URL__#application",
+            "name": "Facebook Video Loader",
+            "url": "__SITE_URL__",
+            "isPartOf": { "@id": "__SITE_ROOT_URL__#website" },
+            "description": __JSON_DESCRIPTION__,
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Windows, macOS, Linux",
+            "browserRequirements": __BROWSER_REQUIREMENTS__,
+            "inLanguage": "__SCHEMA_LANGUAGE__"
+          }
+        ]
       }
     </script>
     <!--adsense-script-->
